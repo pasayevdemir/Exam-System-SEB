@@ -1,0 +1,49 @@
+# --- Stage 1: build frontend assets ---
+FROM node:20-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# --- Stage 2: PHP-FPM + nginx runtime (single container, matches other apps on the server) ---
+FROM php:8.3-fpm
+
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+# Composer deps first for layer caching
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# App code, owned by www-data — no bind mount in production, image is immutable
+COPY --chown=www-data:www-data . .
+COPY --from=frontend --chown=www-data:www-data /app/public/build ./public/build
+
+RUN composer run-script post-autoload-dump || true
+
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+COPY docker/nginx/prod.conf /etc/nginx/sites-available/default
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# nginx master + supervisord need root only to bind port 80 and supervise —
+# actual request handling (php-fpm workers, nginx workers) runs as www-data,
+# configured via the pool/nginx config, not this USER directive.
+EXPOSE 80
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

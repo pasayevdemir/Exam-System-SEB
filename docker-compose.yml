@@ -1,0 +1,74 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: exam_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    command: >
+      sh -c "chmod -R 777 /var/www/storage /var/www/bootstrap/cache && php-fpm"
+    networks:
+      - exam_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  webserver:
+    image: nginx:alpine
+    container_name: exam_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - exam_network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: exam_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: exam_system
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_USER: examuser
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - exam_db_data:/var/lib/mysql
+    networks:
+      - exam_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node:
+    image: node:20-alpine
+    container_name: exam_node
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    command: sh -c "npm install && npm run build"
+    networks:
+      - exam_network
+
+networks:
+  exam_network:
+    driver: bridge
+
+volumes:
+  exam_db_data:
+    driver: local
+  vendor_data:
+    driver: local

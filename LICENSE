@@ -1,0 +1,23 @@
+Copyright (c) 2026 Damir Pashayev <pashayevdamir@gmail.com>
+
+All rights reserved.
+
+This software and its source code, including the exam generation engine, the
+anti-cheat and Safe Exam Browser enforcement layer, the attempt lifecycle and
+autosave subsystem, and all accompanying documentation, are the original work of
+Damir Pashayev.
+
+No permission is granted to copy, modify, merge, publish, distribute, sublicense,
+or sell copies of this software, in whole or in part, without the prior written
+consent of the copyright holder.
+
+Removing, obscuring, or altering this notice, or any authorship attribution
+embedded in the source files, does not transfer or extinguish the copyright in
+this work.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -1,0 +1,67 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+    restart: unless-stopped
+    # ${ENV_FILE:-.env} instead of a literal ".env" — on the server this defaults
+    # to the real production .env, but it lets local/CI testing point at an
+    # isolated env file via `--env-file` without ever loading the real one.
+    env_file:
+      - ${ENV_FILE:-.env}
+    ports:
+      # Bound to loopback only — the host's shared nginx reverse-proxies to this,
+      # matching every other app on this server. Never publish 0.0.0.0 here.
+      - "127.0.0.1:${APP_PORT:-8100}:80"
+    volumes:
+      - storage_data:/var/www/storage
+    networks:
+      - exam_network
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 768M
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    # ${ENV_FILE:-.env} instead of a literal ".env" — on the server this defaults
+    # to the real production .env, but it lets local/CI testing point at an
+    # isolated env file via `--env-file` without ever loading the real one.
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    # No "ports:" — stays on the internal compose network only, unlike the dev
+    # compose file which exposes 3306 to the host. Matches crmdev-db-1 on this server.
+    volumes:
+      - exam_db_data:/var/lib/mysql
+    networks:
+      - exam_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+
+networks:
+  exam_network:
+    driver: bridge
+
+volumes:
+  exam_db_data:
+    driver: local
+  storage_data:
+    driver: local
