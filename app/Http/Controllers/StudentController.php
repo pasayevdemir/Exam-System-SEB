@@ -44,16 +44,45 @@ class StudentController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        User::create([
+        // No Hash::make here — the User model casts 'password' => 'hashed', which
+        // is the same mechanism every other password write in this app relies on.
+        $user = User::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
             'email' => $validated['email'],
             'fin_code' => $validated['fin_code'],
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
         ]);
 
-        return redirect()->route('student.login')->with('success', 'Account created successfully! Please sign in.');
+        // Sign them straight in rather than bouncing them back to a login form
+        // with credentials they typed thirty seconds ago.
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $response = redirect()->route('student.profile')
+                              ->with('success', 'Account created successfully! Welcome.');
+
+        return $this->clearAdminSession($request, $response);
+    }
+
+    /**
+     * Drop an admin session left over in this browser.
+     *
+     * StudentMiddleware bounces anyone carrying `admin_logged_in`, so without
+     * this an admin who registers or signs in as a student from the same browser
+     * lands in a redirect loop with no explanation. Note that session()->regenerate()
+     * rotates the id but *keeps* the data, so the flag has to be dropped explicitly.
+     */
+    private function clearAdminSession(Request $request, $response)
+    {
+        if (! $request->session()->has('admin_logged_in')) {
+            return $response;
+        }
+
+        $request->session()->forget('admin_logged_in');
+
+        return $response->with('warning', 'You have been signed out of the admin panel in this browser.');
     }
 
     public function login()
@@ -74,7 +103,7 @@ class StudentController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('student.exams');
+        return $this->clearAdminSession($request, redirect()->route('student.exams'));
     }
 
     public function passwordRequest()
@@ -574,6 +603,84 @@ class StudentController extends Controller
         return redirect()->route('student.login')->with('success', 'You have been successfully logged out.');
     }
 
+    public function profile()
+    {
+        $user = Auth::user();
+
+        return view('student.profile', [
+            'user' => $user,
+            'finLocked' => $this->finCodeIsLocked($user),
+        ]);
+    }
+
+    /**
+     * The FIN code is the national ID that ties a student to every score report
+     * they appear on. Once they have exam history, letting them rewrite it would
+     * break the link between an already-issued result and a real person — so it
+     * freezes at the first attempt. Before that it stays editable, because a
+     * typo at registration is common and shouldn't need an admin.
+     */
+    private function finCodeIsLocked(User $user): bool
+    {
+        return ExamAttempt::where('user_id', $user->id)->exists()
+            || ExamResult::where('user_id', $user->id)->exists();
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        $finLocked = $this->finCodeIsLocked($user);
+
+        $rules = [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        ];
+
+        if (! $finLocked) {
+            $rules['fin_code'] = ['required', 'string', 'max:20', Rule::unique('users', 'fin_code')->ignore($user->id)];
+        }
+
+        $validated = $request->validate($rules);
+
+        // The form renders the locked field as disabled, but a hand-crafted POST
+        // would still carry it — dropping it here is what actually enforces this.
+        if ($finLocked) {
+            unset($validated['fin_code']);
+        }
+
+        $user->update($validated);
+
+        return redirect()->route('student.profile')->with('success', 'Your details have been updated.');
+    }
+
+    /**
+     * A signed-in student changing their own password.
+     *
+     * This is deliberately different from the forgotten-password flow, which
+     * stays admin-approved: there the student cannot prove who they are, whereas
+     * here they are already authenticated and re-type the current password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+
+        $user = Auth::user();
+        $user->update(['password' => $validated['password']]);
+
+        // Any request they raised before remembering their password would
+        // otherwise sit in the admin queue forever.
+        PasswordResetRequest::closePendingFor($user);
+
+        $request->session()->regenerate();
+
+        return redirect()->route('student.profile')->with('success', 'Your password has been changed.');
+    }
+
     public function myResults()
     {
         $examResults = ExamResult::where('user_id', Auth::id())
@@ -584,33 +691,39 @@ class StudentController extends Controller
         return view('student.my-results', compact('examResults'));
     }
 
+    /**
+     * A student's own summary for one sitting.
+     *
+     * Deliberately shows no questions, no chosen answers and no answer key: a
+     * student reviewing this page must not be able to read the bank back out of
+     * it. Only facts about the sitting itself are exposed.
+     *
+     * That also removes the reason the page used to gate itself on an open
+     * retake — with no answer key on the page there is nothing left to leak
+     * into an attempt that is still running.
+     */
     public function showResult(ExamResult $examResult)
     {
         abort_unless($examResult->user_id === Auth::id(), 403);
 
-        $examResult->load(['exam', 'user', 'studentAnswers.question', 'studentAnswers.answer']);
+        // studentAnswers is loaded for hasGradingPending(), which reads only
+        // file_path/is_graded off those rows — questions and answers stay unloaded.
+        $examResult->load(['exam', 'user', 'examAttempt', 'studentAnswers']);
 
-        // Check if there are any file upload questions that are not graded yet
-        $fileUploadAnswers = $examResult->studentAnswers->filter(function($answer) {
-            return $answer->question->isFileUpload();
-        });
+        $attempt = $examResult->examAttempt;
 
-        $ungradedFiles = $fileUploadAnswers->filter(function($answer) {
-            return !$answer->is_graded;
-        });
+        // The attempt is SET NULL when an admin clears history, so a result can
+        // outlive it; duration is simply unavailable in that case.
+        // Carbon 3 returns a float here, which would render as "30.41666 min".
+        $durationMinutes = ($attempt && $attempt->started_at && $attempt->completed_at)
+            ? (int) round($attempt->started_at->diffInMinutes($attempt->completed_at))
+            : null;
 
-        $hasUngradedFiles = $ungradedFiles->isNotEmpty();
-        $exam = $examResult->exam;
-
-        // A granted retake supersedes the old attempt but leaves this page
-        // reachable, and it spells out every correct answer. While a fresh
-        // attempt is open the student may see their score but not the key.
-        $hasOpenAttempt = ExamAttempt::active()
-            ->where('exam_id', $examResult->exam_id)
-            ->where('user_id', Auth::id())
-            ->whereNull('completed_at')
-            ->exists();
-
-        return view('student.check-results-display', compact('examResult', 'exam', 'hasUngradedFiles', 'fileUploadAnswers', 'hasOpenAttempt'));
+        return view('student.check-results-display', [
+            'examResult' => $examResult,
+            'exam' => $examResult->exam,
+            'gradingPending' => $examResult->hasGradingPending(),
+            'durationMinutes' => $durationMinutes,
+        ]);
     }
 }

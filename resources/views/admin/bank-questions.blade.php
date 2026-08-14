@@ -14,9 +14,14 @@
             <p class="text-muted mb-0">{{ $bank->description }}</p>
         @endif
     </div>
-    <a href="{{ route('admin.edit-bank', $bank->id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-edit me-1"></i>Edit Bank
-    </a>
+    <div class="btn-group">
+        <a href="{{ route('admin.import-questions', $bank->id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-file-import me-1"></i>Import Questions
+        </a>
+        <a href="{{ route('admin.edit-bank', $bank->id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-edit me-1"></i>Edit Bank
+        </a>
+    </div>
 </div>
 
 <div class="row">

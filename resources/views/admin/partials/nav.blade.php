@@ -13,6 +13,13 @@
 <a class="nav-link text-white" href="{{ route('admin.banks') }}">
     <i class="fas fa-layer-group me-1"></i>Question Banks
 </a>
+<a class="nav-link text-white" href="{{ route('admin.settings') }}">
+    <i class="fas fa-cog me-1"></i>Settings
+    @if(app(\App\Services\AdminCredentials::class)->isUsingEnvFallback())
+        {{-- The password still lives in the server env file and dies on redeploy. --}}
+        <span class="badge bg-warning text-dark ms-1" title="Admin password still comes from the environment file">!</span>
+    @endif
+</a>
 <form action="{{ route('admin.logout') }}" method="POST" class="d-inline">
     @csrf
     <button type="submit" class="btn btn-link text-white text-decoration-none">

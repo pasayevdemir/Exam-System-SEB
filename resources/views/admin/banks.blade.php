@@ -42,14 +42,12 @@
                             <a href="{{ route('admin.edit-bank', $bank->id) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-edit me-1"></i>Edit
                             </a>
-                            <form action="{{ route('admin.delete-bank', $bank->id) }}" method="POST" class="d-inline"
-                                  onsubmit="return confirm('Delete this bank? This cannot be undone.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash me-1"></i>Delete
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteBankModal"
+                                    data-action="{{ route('admin.delete-bank', $bank->id) }}"
+                                    data-item="{{ $bank->name }} ({{ $bank->questions_count }} question(s))">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -70,4 +68,16 @@
         </a>
     </div>
 @endif
+
+@include('admin.partials.password-confirm-modal', [
+    'id' => 'deleteBankModal',
+    'title' => 'Confirm Bank Deletion',
+    'heading' => 'Delete this question bank?',
+    'buttonLabel' => 'Delete Bank',
+    'warnings' => [
+        'The bank and every question inside it will be permanently deleted.',
+        'The bank will be unregistered from any exam it is attached to.',
+        'If its questions were already served in an exam attempt or answered by a student, deletion is refused to keep those results intact.',
+    ],
+])
 @endsection

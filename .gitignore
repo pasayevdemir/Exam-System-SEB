@@ -6,6 +6,7 @@
 !.env.*.example
 .phpactor.json
 .phpunit.result.cache
+/.claude
 /.fleet
 /.idea
 /.nova
@@ -23,6 +24,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 Archive.zip
+questions.json
 
 # Secrets and keys — never commit
 *.pem

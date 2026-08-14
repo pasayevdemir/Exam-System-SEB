@@ -7,6 +7,16 @@
 @endsection
 
 @section('content')
+@if(app(\App\Services\AdminCredentials::class)->isUsingEnvFallback())
+    {{-- Without this nag the durable-credential feature simply never gets used. --}}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Your admin password comes from the server environment file and will be lost on the next redeploy.
+        <a href="{{ route('admin.settings') }}" class="alert-link">Set a password</a> to store it in the database.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-0">
@@ -89,6 +99,14 @@
                                 <i class="fas fa-chart-bar me-1"></i>
                                 Results
                             </a>
+
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteExamModal"
+                                    data-action="{{ route('admin.delete-exam', $exam->id) }}"
+                                    data-item="{{ $exam->exam_name }}">
+                                <i class="fas fa-trash me-1"></i>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -111,6 +129,18 @@
         </a>
     </div>
 @endif
+
+@include('admin.partials.password-confirm-modal', [
+    'id' => 'deleteExamModal',
+    'title' => 'Confirm Exam Deletion',
+    'heading' => 'Delete this exam?',
+    'buttonLabel' => 'Delete Exam',
+    'warnings' => [
+        'The exam is permanently deleted and its question banks are unregistered from it.',
+        'The banks themselves and all of their questions are kept — an exam only borrows questions from a bank.',
+        'If any student has already attempted this exam or has a result for it, deletion is refused. Deactivate the exam instead.',
+    ],
+])
 @endsection
 
 @section('scripts')

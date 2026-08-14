@@ -10,6 +10,7 @@
 
 namespace App\Providers;
 
+use App\Services\AdminCredentials;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -20,7 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Singleton so the credential row is read once per request rather than
+        // on every call — the login check, the middleware-protected pages and
+        // the delete confirmation all ask the same instance.
+        $this->app->singleton(AdminCredentials::class);
     }
 
     /**

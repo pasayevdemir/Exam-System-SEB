@@ -48,9 +48,18 @@ return Application::configure(basePath: dirname(__DIR__))
             // Uploaded files cannot be serialised into the session, so only
             // repopulate the form when the request carried none.
             if (empty($request->allFiles())) {
-                $redirect->withInput($request->except([
-                    '_token', 'password', 'password_confirmation', 'entry_password',
-                ]));
+                // Flashed input is written to the session store — `database`
+                // driver, SESSION_ENCRYPT=false — so anything kept here lands in
+                // `sessions.payload` as plaintext. Drop every credential field by
+                // pattern rather than by name: an explicit denylist silently fails
+                // open the moment a new *_password field is added to a form, and
+                // no form ever wants a password repopulated anyway.
+                $sensitive = array_filter(
+                    array_keys($request->all()),
+                    fn ($key) => stripos($key, 'password') !== false
+                );
+
+                $redirect->withInput($request->except([...$sensitive, '_token']));
             }
 
             return $redirect;

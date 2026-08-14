@@ -158,3 +158,31 @@ it('refuses to drop an option a student has already chosen', function () {
     expect($seed['question']->fresh()->answers)->toHaveCount(4)
         ->and(StudentAnswer::count())->toBe(1);
 });
+
+it('keeps the correct answer on the right option when an edit blanks a middle option', function () {
+    // Same index-remap hazard as creation: the form posts positions in its own
+    // array, so a blank in the middle must not shift which option is correct.
+    $seed = seedQuestion(['Alpha', 'Beta', 'Gamma', 'Delta'], 0);
+
+    editQuestion($seed['question'], [
+        'answers' => ['Alpha', 'Beta', '', 'Delta'],
+        'correct_answers' => [3], // the admin clicked "Delta"
+    ]);
+
+    $answers = $seed['question']->fresh()->answers()->orderBy('id')->get();
+
+    expect($answers->where('is_correct', true)->pluck('answer_text')->values()->all())->toBe(['Delta']);
+});
+
+it('refuses an edit that leaves a single choice question with two correct answers', function () {
+    $seed = seedQuestion(['Alpha', 'Beta', 'Gamma', 'Delta'], 0);
+
+    editQuestion($seed['question'], [
+        'answers' => ['Alpha', 'Beta', 'Gamma', 'Delta'],
+        'correct_answers' => [0, 2],
+    ])->assertSessionHasErrors('correct_answers');
+
+    $answers = $seed['question']->fresh()->answers()->orderBy('id')->get();
+
+    expect($answers->where('is_correct', true))->toHaveCount(1);
+});

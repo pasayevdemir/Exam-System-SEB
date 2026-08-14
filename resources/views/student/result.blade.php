@@ -3,12 +3,7 @@
 @section('title', 'Exam Result')
 
 @section('nav-items')
-    <form action="{{ route('student.logout') }}" method="POST" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-link nav-link text-white">
-            <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </button>
-    </form>
+    @include('student.partials.nav')
 @endsection
 
 @section('content')

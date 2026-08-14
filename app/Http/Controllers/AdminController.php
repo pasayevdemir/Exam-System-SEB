@@ -12,6 +12,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Models\ExamAttemptQuestion;
 use App\Models\ExamQuestionBank;
 use App\Models\Question;
 use App\Models\QuestionBank;
@@ -20,7 +21,11 @@ use App\Models\ExamResult;
 use App\Models\PasswordResetRequest;
 use App\Models\StudentAnswer;
 use App\Models\User;
+use App\Services\AdminCredentials;
+use App\Services\QuestionImportService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -34,6 +39,10 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class AdminController extends Controller
 {
+    public function __construct(private readonly AdminCredentials $credentials)
+    {
+    }
+
     public function login()
     {
         return view('admin.login');
@@ -46,22 +55,73 @@ class AdminController extends Controller
             'password' => 'required|string',
         ]);
 
-        $adminUsername = config('admin.username');
-        $adminPassword = config('admin.password');
-
-        if ($request->username === $adminUsername && $request->password === $adminPassword) {
-            $request->session()->regenerate();
-            session(['admin_logged_in' => true]);
-            return redirect()->route('admin.dashboard')->with('success', 'Welcome to Admin Dashboard!');
-        } else {
+        if (! $this->credentials->verifyLogin($request->username, $request->password)) {
             return back()->with('error', 'Invalid username or password.');
         }
+
+        $request->session()->regenerate();
+        session(['admin_logged_in' => true]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Welcome to Admin Dashboard!');
     }
 
     public function logout()
     {
         session()->forget('admin_logged_in');
         return redirect()->route('admin.login')->with('success', 'You have been logged out successfully.');
+    }
+
+    /**
+     * Re-check the admin password for destructive actions.
+     *
+     * Being logged in is not enough to delete a bank or an exam — an unattended
+     * open session should not be one click away from wiping content. The actual
+     * comparison lives in AdminCredentials so this gate and the login check can
+     * never disagree about which password is current.
+     */
+    private function adminPasswordMatches(?string $candidate): bool
+    {
+        return $this->credentials->passwordMatches($candidate);
+    }
+
+    /**
+     * The credential settings page.
+     */
+    public function settings()
+    {
+        return view('admin.settings', [
+            'username' => $this->credentials->username(),
+            'usingEnvFallback' => $this->credentials->isUsingEnvFallback(),
+        ]);
+    }
+
+    public function updateCredentials(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'username' => ['required', 'string', 'max:255'],
+            // Nullable so the username can be corrected on its own. Longer than
+            // the students' min:8 because this one credential authorises every
+            // destructive action in the system.
+            'password' => ['nullable', 'string', 'min:12', 'confirmed'],
+        ]);
+
+        if (! $this->credentials->passwordMatches($validated['current_password'])) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.'])
+                         ->withInput($request->except(['current_password', 'password', 'password_confirmation']));
+        }
+
+        $this->credentials->update($validated['username'], $validated['password'] ?? null);
+
+        // Keep the admin signed in, but on a fresh session id.
+        $request->session()->regenerate();
+        session(['admin_logged_in' => true]);
+
+        $message = filled($validated['password'] ?? null)
+            ? 'Admin credentials updated. Your new password is now required everywhere, including delete confirmations.'
+            : 'Admin username updated.';
+
+        return redirect()->route('admin.settings')->with('success', $message);
     }
 
     public function dashboard()
@@ -187,23 +247,77 @@ class AdminController extends Controller
         return redirect()->route('admin.banks')->with('success', 'Question bank updated successfully!');
     }
 
-    public function deleteBank($bankId)
+    /**
+     * Delete a bank together with its questions, gated behind the admin password.
+     *
+     * Having questions or being attached to an exam no longer blocks deletion —
+     * the questions are removed and the exam attachments detached as part of the
+     * same transaction. What still blocks it is student history: once a question
+     * has been served in an attempt or answered, deleting it would orphan real
+     * results, so the bank is kept and the admin is told why.
+     */
+    public function deleteBank(Request $request, $bankId)
     {
         $bank = QuestionBank::withCount('questions')->findOrFail($bankId);
 
-        if ($bank->questions_count > 0) {
+        if (! $this->adminPasswordMatches($request->input('admin_password'))) {
             return redirect()->route('admin.banks')
-                           ->with('error', 'Cannot delete a bank that still has questions. Remove its questions first.');
+                           ->with('error', 'Incorrect admin password. The bank was not deleted.');
         }
 
-        if ($bank->exams()->exists()) {
-            return redirect()->route('admin.banks')
-                           ->with('error', 'Cannot delete a bank that is attached to an exam. Detach it first.');
+        $questionIds = $bank->questions()->pluck('id');
+
+        $servedCount = ExamAttemptQuestion::whereIn('question_id', $questionIds)->count();
+        $answeredCount = StudentAnswer::whereIn('question_id', $questionIds)->count();
+
+        if ($servedCount > 0 || $answeredCount > 0) {
+            return redirect()->route('admin.banks')->with(
+                'error',
+                "Cannot delete \"{$bank->name}\": its questions are part of student history "
+                . "({$servedCount} served in exam attempts, {$answeredCount} answered). "
+                . 'Deleting it would orphan existing results.'
+            );
         }
 
-        $bank->delete();
+        $attachedExamIds = $bank->exams()->pluck('exams.id');
+        $deactivated = 0;
 
-        return redirect()->route('admin.banks')->with('success', 'Question bank deleted successfully!');
+        try {
+            DB::transaction(function () use ($bank, $questionIds, $attachedExamIds, &$deactivated) {
+                // Both are RESTRICT in the schema, so they must go before the bank itself.
+                // Answers hang off questions with ON DELETE CASCADE and need no explicit pass.
+                $bank->exams()->detach();
+                Question::whereIn('id', $questionIds)->delete();
+                $bank->delete();
+
+                // An exam draws its questions solely from its banks, so one left with
+                // none would generate an empty attempt — a student would be handed a
+                // timed exam with zero questions and scored 0/0. Park those instead.
+                $deactivated = Exam::whereIn('id', $attachedExamIds)
+                    ->where('is_active', true)
+                    ->whereDoesntHave('examQuestionBanks')
+                    ->update(['is_active' => false]);
+            });
+        } catch (QueryException $e) {
+            // The history guards above are read outside the transaction, so an
+            // attempt generated in between still trips a RESTRICT foreign key.
+            // Report that as the same refusal rather than a 500.
+            return redirect()->route('admin.banks')->with(
+                'error',
+                "Could not delete \"{$bank->name}\": a student attempt started while the deletion was in progress."
+            );
+        }
+
+        $detail = "{$bank->questions_count} question(s) removed";
+        if ($attachedExamIds->isNotEmpty()) {
+            $detail .= ", detached from {$attachedExamIds->count()} exam(s)";
+        }
+        if ($deactivated > 0) {
+            $detail .= ", {$deactivated} exam(s) deactivated for having no banks left";
+        }
+
+        return redirect()->route('admin.banks')
+                       ->with('success', "Question bank \"{$bank->name}\" deleted — {$detail}.");
     }
 
     public function bankQuestions($bankId)
@@ -236,19 +350,31 @@ class AdminController extends Controller
                 'correct_answers' => 'required|array|min:1',
                 'correct_answers.*' => 'required|integer'
             ];
+
+            // A single-choice question with two correct answers is unscoreable.
+            // Only the create form's JS enforced this before, so anything that
+            // did not come through that form could store one.
+            if ($request->question_type === 'single') {
+                $rules['correct_answers'] = 'required|array|size:1';
+            }
         }
 
         // Filter out empty answers before validation
         if ($request->has('answers')) {
+            // Captured BEFORE the merge below: correct_answers holds positions in
+            // the form's array, so remapping them needs the array as submitted.
+            // Reading it back after the merge compares form positions against the
+            // already-filtered list and silently marks the wrong option correct.
+            $originalAnswers = $request->input('answers');
+
             $filteredAnswers = array_filter($request->answers, function($answer) {
                 return !empty(trim($answer));
             });
             $filteredAnswers = array_values($filteredAnswers); // Re-index array
             $request->merge(['answers' => $filteredAnswers]);
-            
+
             // Adjust correct_answers indices to match filtered answers
             if ($request->has('correct_answers')) {
-                $originalAnswers = $request->input('answers');
                 $correctAnswersAdjusted = [];
                 
                 foreach ($request->correct_answers as $originalIndex) {
@@ -291,22 +417,104 @@ class AdminController extends Controller
             ];
         }
 
-        $question = Question::create($questionData);
+        // One transaction: a question that half-saved would be served to students
+        // as an item they cannot answer but which still counts toward their score.
+        DB::transaction(function () use ($request, $questionData) {
+            $question = Question::create($questionData);
 
-        // Create answers only for MCQ questions
-        if (in_array($request->question_type, ['single', 'multiple'])) {
-            foreach ($request->answers as $index => $answerText) {
-                if (!empty(trim($answerText))) {
-                    Answer::create([
-                        'question_id' => $question->id,
-                        'answer_text' => $answerText,
-                        'is_correct' => in_array($index, $request->correct_answers)
-                    ]);
+            // Create answers only for MCQ questions
+            if (in_array($request->question_type, ['single', 'multiple'])) {
+                foreach ($request->answers as $index => $answerText) {
+                    if (!empty(trim($answerText))) {
+                        Answer::create([
+                            'question_id' => $question->id,
+                            'answer_text' => $answerText,
+                            'is_correct' => in_array($index, $request->correct_answers)
+                        ]);
+                    }
                 }
             }
-        }
+        });
 
         return redirect()->route('admin.bank-questions', $bankId)->with('success', 'Question added successfully!');
+    }
+
+    /**
+     * The bulk-import page for one bank.
+     *
+     * Deliberately not sharing a layer with storeQuestion above: that method
+     * takes a wide flat form payload, branches into a file_upload arm, filters
+     * blank answers and re-maps correct_answers against the filtered array —
+     * none of which an import has or wants. A common abstraction over the two
+     * shapes would be more branches than the handful of lines it saves.
+     */
+    public function importQuestions($bankId)
+    {
+        $bank = QuestionBank::withCount('questions')->findOrFail($bankId);
+
+        return view('admin.import-questions', compact('bank'));
+    }
+
+    public function storeImportedQuestions(Request $request, $bankId, QuestionImportService $importer)
+    {
+        $bank = QuestionBank::findOrFail($bankId);
+
+        $request->validate([
+            // Extension-only on purpose. MIME sniffing for CSV/JSON is unreliable
+            // in practice (finfo says text/plain for CSV, Excel uploads arrive as
+            // application/vnd.ms-excel, some browsers send octet-stream for .json)
+            // and would reject legitimate files while buying no safety here — the
+            // parser reads text and never evaluates it.
+            'file' => ['required', 'file', 'max:2048', 'extensions:csv,txt,json'],
+        ]);
+
+        $file = $request->file('file');
+        $format = strtolower($file->getClientOriginalExtension()) === 'json' ? 'json' : 'csv';
+
+        // Read straight from PHP's upload temp path — never ->store(). The only
+        // persistent volume in production is storage_data, and spooled imports
+        // would accumulate there with nothing to clean them up.
+        $contents = (string) $file->get();
+
+        if (trim($contents) === '') {
+            return back()->withErrors(['file' => 'The uploaded file is empty.']);
+        }
+
+        $result = $importer->parse(
+            $contents,
+            $format,
+            Question::where('question_bank_id', $bank->id)->pluck('question_text')->all(),
+            $request->boolean('skip_duplicates')
+        );
+
+        if ($result['errors']->isNotEmpty()) {
+            return back()->withErrors($result['errors'])->withInput();
+        }
+
+        $created = $importer->import($bank, $result['rows']);
+
+        $message = "Imported {$created} question(s) into \"{$bank->name}\".";
+        if ($result['skipped'] > 0) {
+            $message .= " Skipped {$result['skipped']} already in this bank.";
+        }
+
+        return redirect()->route('admin.bank-questions', $bank->id)->with('success', $message);
+    }
+
+    public function importTemplate($format, QuestionImportService $importer)
+    {
+        if ($format === 'json') {
+            return response($importer->jsonTemplate(), 200, [
+                'Content-Type' => 'application/json; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="question-import-template.json"',
+            ]);
+        }
+
+        // The BOM is what makes Excel open non-ASCII sample text correctly.
+        return response("\xEF\xBB\xBF" . $importer->csvTemplate(), 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="question-import-template.csv"',
+        ]);
     }
 
     public function editQuestion($questionId)
@@ -338,19 +546,31 @@ class AdminController extends Controller
                 'correct_answers' => 'required|array|min:1',
                 'correct_answers.*' => 'required|integer'
             ];
+
+            // Same rule as storeQuestion: editing must not be a way to reach the
+            // unscoreable "single choice with two correct answers" state that
+            // creating one already refuses.
+            if ($request->question_type === 'single') {
+                $rules['correct_answers'] = 'required|array|size:1';
+            }
         }
 
         // Filter out empty answers before validation (same logic as storeQuestion)
         if ($request->has('answers')) {
+            // Captured BEFORE the merge below: correct_answers holds positions in
+            // the form's array, so remapping them needs the array as submitted.
+            // Reading it back after the merge compares form positions against the
+            // already-filtered list and silently marks the wrong option correct.
+            $originalAnswers = $request->input('answers');
+
             $filteredAnswers = array_filter($request->answers, function($answer) {
                 return !empty(trim($answer));
             });
             $filteredAnswers = array_values($filteredAnswers); // Re-index array
             $request->merge(['answers' => $filteredAnswers]);
-            
+
             // Adjust correct_answers indices to match filtered answers
             if ($request->has('correct_answers')) {
-                $originalAnswers = $request->input('answers');
                 $correctAnswersAdjusted = [];
                 
                 foreach ($request->correct_answers as $originalIndex) {
@@ -553,6 +773,62 @@ class AdminController extends Controller
 
         return redirect()->route('admin.bank-questions', $bankId)
                         ->with('success', 'Question deleted successfully!');
+    }
+
+    /**
+     * Delete an exam, gated behind the admin password.
+     *
+     * The bank attachments are unregistered first and the exam is then removed —
+     * the banks themselves and every question in them survive, since an exam only
+     * ever borrows questions from a bank. Student history still blocks deletion:
+     * attempts and results reference the exam with ON DELETE RESTRICT, and losing
+     * them is not something a password prompt should be able to authorise.
+     */
+    public function deleteExam(Request $request, $examId)
+    {
+        $exam = Exam::findOrFail($examId);
+
+        if (! $this->adminPasswordMatches($request->input('admin_password'))) {
+            return redirect()->route('admin.dashboard')
+                           ->with('error', 'Incorrect admin password. The exam was not deleted.');
+        }
+
+        $attemptCount = $exam->attempts()->count();
+        $resultCount = $exam->examResults()->count();
+
+        if ($attemptCount > 0 || $resultCount > 0) {
+            return redirect()->route('admin.dashboard')->with(
+                'error',
+                "Cannot delete \"{$exam->exam_name}\": it has student history "
+                . "({$attemptCount} attempt(s), {$resultCount} result(s)). "
+                . 'Deactivate it instead to hide it from students.'
+            );
+        }
+
+        $bankCount = $exam->examQuestionBanks()->count();
+        $examName = $exam->exam_name;
+
+        try {
+            DB::transaction(function () use ($exam) {
+                // Unregister the banks explicitly rather than leaning on the pivot's
+                // ON DELETE CASCADE, so the intent is visible at the call site.
+                $exam->examQuestionBanks()->delete();
+                $exam->delete();
+            });
+        } catch (QueryException $e) {
+            // Same race as deleteBank: the attempt/result guards are read before
+            // the transaction, so a student starting in between hits the RESTRICT
+            // foreign key on exam_attempts.exam_id.
+            return redirect()->route('admin.dashboard')->with(
+                'error',
+                "Could not delete \"{$exam->exam_name}\": a student attempt started while the deletion was in progress."
+            );
+        }
+
+        return redirect()->route('admin.dashboard')->with(
+            'success',
+            "Exam \"{$examName}\" deleted — {$bankCount} bank(s) unregistered. The banks and their questions were kept."
+        );
     }
 
     public function toggleExamStatus($examId)
@@ -1120,7 +1396,7 @@ class AdminController extends Controller
 
         if ($request->input('mode') === 'fin') {
             $student->update(['password' => $student->fin_code]);
-            $this->closePendingResetRequests($student);
+            PasswordResetRequest::closePendingFor($student);
 
             return back()->with('success', "Password for {$student->name} is now their FIN code ({$student->fin_code}).");
         }
@@ -1130,21 +1406,11 @@ class AdminController extends Controller
         ]);
 
         $student->update(['password' => $validated['password']]);
-        $this->closePendingResetRequests($student);
+        PasswordResetRequest::closePendingFor($student);
 
         // The admin chose this password, so there is nothing to hand back - and
         // echoing it into a flash message would put it in the session store.
         return back()->with('success', "Password updated for {$student->name}.");
-    }
-
-    private function closePendingResetRequests(User $student): void
-    {
-        PasswordResetRequest::where('user_id', $student->id)
-            ->pending()
-            ->update([
-                'status' => PasswordResetRequest::STATUS_APPROVED,
-                'resolved_at' => now(),
-            ]);
     }
 
     public function rejectResetRequest($requestId)

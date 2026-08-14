@@ -17,17 +17,24 @@ Route::redirect('/', '/start-exam');
 // Admin Authentication Routes (no middleware)
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminController::class, 'login'])->name('login');
-    Route::post('/authenticate', [AdminController::class, 'authenticate'])->name('authenticate');
+    // Throttled: the admin password is now a hashed credential at a stable URL,
+    // i.e. a worthwhile brute-force target. Same idiom as student.password-request.store.
+    Route::post('/authenticate', [AdminController::class, 'authenticate'])
+        ->middleware('throttle:5,1')
+        ->name('authenticate');
     Route::post('/logout', [AdminController::class, 'logout'])->name('logout');
 });
 
 // Admin Routes (protected by middleware)
 Route::prefix('examadmin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    Route::put('/settings/credentials', [AdminController::class, 'updateCredentials'])->name('update-credentials');
     Route::get('/create-exam', [AdminController::class, 'createExam'])->name('create-exam');
     Route::post('/store-exam', [AdminController::class, 'storeExam'])->name('store-exam');
     Route::get('/exam/{exam}/edit', [AdminController::class, 'editExam'])->name('edit-exam');
     Route::put('/exam/{exam}', [AdminController::class, 'updateExam'])->name('update-exam');
+    Route::delete('/exam/{exam}', [AdminController::class, 'deleteExam'])->name('delete-exam');
 
     Route::get('/banks', [AdminController::class, 'banks'])->name('banks');
     Route::get('/banks/create', [AdminController::class, 'createBank'])->name('create-bank');
@@ -37,6 +44,11 @@ Route::prefix('examadmin')->name('admin.')->middleware('admin')->group(function 
     Route::delete('/banks/{bank}', [AdminController::class, 'deleteBank'])->name('delete-bank');
     Route::get('/banks/{bank}/questions', [AdminController::class, 'bankQuestions'])->name('bank-questions');
     Route::post('/banks/{bank}/questions', [AdminController::class, 'storeQuestion'])->name('store-question');
+    Route::get('/banks/{bank}/questions/import', [AdminController::class, 'importQuestions'])->name('import-questions');
+    Route::post('/banks/{bank}/questions/import', [AdminController::class, 'storeImportedQuestions'])->name('store-imported-questions');
+    Route::get('/questions/import-template/{format}', [AdminController::class, 'importTemplate'])
+        ->whereIn('format', ['csv', 'json'])
+        ->name('import-template');
 
     Route::get('/question/{question}/edit', [AdminController::class, 'editQuestion'])->name('edit-question');
     Route::put('/question/{question}', [AdminController::class, 'updateQuestion'])->name('update-question');
@@ -72,11 +84,19 @@ Route::post('/forgot-password', [StudentController::class, 'storePasswordRequest
     ->middleware('throttle:10,1')
     ->name('student.password-request.store');
 Route::prefix('student')->name('student.')->group(function () {
-    Route::post('/authenticate', [StudentController::class, 'authenticate'])->name('authenticate');
+    // Throttled for the same reason as the admin login, and more urgently: an
+    // admin can set a student's password to their FIN code, which is short and
+    // guessable, so an unlimited login endpoint is a real search space.
+    Route::post('/authenticate', [StudentController::class, 'authenticate'])
+        ->middleware('throttle:10,1')
+        ->name('authenticate');
     Route::post('/logout', [StudentController::class, 'logout'])->name('logout');
 
     Route::middleware('student')->group(function () {
         Route::get('/exams', [StudentController::class, 'exams'])->name('exams');
+        Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
+        Route::put('/profile', [StudentController::class, 'updateProfile'])->name('update-profile');
+        Route::put('/profile/password', [StudentController::class, 'updatePassword'])->name('update-password');
         Route::get('/my-results', [StudentController::class, 'myResults'])->name('my-results');
         Route::get('/my-results/{examResult}', [StudentController::class, 'showResult'])->name('show-result');
 

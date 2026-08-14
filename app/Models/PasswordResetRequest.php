@@ -52,4 +52,20 @@ class PasswordResetRequest extends Model
     {
         return static::pending()->count();
     }
+
+    /**
+     * Resolve any open request for a student once their password has actually
+     * been changed — whether an admin set it or the student changed it from
+     * their own profile. A request left pending after the fact keeps burning in
+     * the admin queue and in the navbar badge forever.
+     */
+    public static function closePendingFor(User $student): void
+    {
+        static::where('user_id', $student->id)
+            ->pending()
+            ->update([
+                'status' => self::STATUS_APPROVED,
+                'resolved_at' => now(),
+            ]);
+    }
 }

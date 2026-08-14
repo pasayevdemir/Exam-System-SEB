@@ -3,18 +3,7 @@
 @section('title', 'Available Exams')
 
 @section('nav-items')
-    <span class="nav-link text-white">
-        <i class="fas fa-user-graduate me-1"></i>{{ auth()->user()->name }}
-    </span>
-    <a class="nav-link text-white" href="{{ route('student.my-results') }}">
-        <i class="fas fa-chart-line me-1"></i>My Results
-    </a>
-    <form action="{{ route('student.logout') }}" method="POST" class="d-inline">
-        @csrf
-        <button type="submit" class="btn btn-link nav-link text-white">
-            <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </button>
-    </form>
+    @include('student.partials.nav')
 @endsection
 
 @section('content')

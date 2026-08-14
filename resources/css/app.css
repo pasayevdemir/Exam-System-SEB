@@ -1,17 +1,21 @@
-@import "tailwindcss";
+/*
+ * Tailwind is deliberately NOT imported here.
+ *
+ * Its scanner reads the Blade templates, sees Bootstrap's own class names
+ * (`collapse`, `table`, `border`, `w-100`, `col-auto`, `shadow-sm`, …) and emits
+ * same-named utilities for them. Most stayed harmless only because Bootstrap
+ * ships unlayered and so outranks Tailwind's `@layer utilities` — but `.collapse`
+ * did not: Tailwind emitted `visibility: collapse`, a property Bootstrap never
+ * sets on that class, so nothing overrode it. Every open accordion and collapse
+ * rendered invisible, and because `visibility` inherits, the whole panel body
+ * went with it.
+ *
+ * Nothing in the app ever used a real Tailwind utility, so the import is gone
+ * rather than prefixed. If Tailwind is wanted back, bring it in as
+ * `@import "tailwindcss" prefix(tw);` so it can never collide with Bootstrap.
+ */
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
-
-@theme {
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-        "Noto Color Emoji";
-}
 
 /* ── Peerstack Academy Design System ── */
 
