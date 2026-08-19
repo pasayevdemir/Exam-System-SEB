@@ -100,4 +100,19 @@ class ExamAttempt extends Model
 
         return now()->subSeconds($grace)->greaterThanOrEqualTo($this->expires_at);
     }
+
+    /**
+     * Seconds left before the attempt expires, or null when the exam is untimed.
+     * The clock on the exam page re-syncs against this, so it deliberately
+     * ignores the grace period - the candidate should see zero when the exam
+     * ends, not when the server stops accepting a submission.
+     */
+    public function remainingSeconds(): ?int
+    {
+        if ($this->expires_at === null) {
+            return null;
+        }
+
+        return max(0, (int) now()->diffInSeconds($this->expires_at, false));
+    }
 }

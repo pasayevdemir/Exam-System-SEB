@@ -11,6 +11,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ConcurrentExamAttemptException;
+use App\Exceptions\ExamClosedException;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamAttemptAnswer;
@@ -139,7 +140,11 @@ class StudentController extends Controller
         );
     }
 
-    public function exams()
+    /**
+     * Everything student.partials.exam-list renders. Shared by the page and by
+     * examsState() so the live poll can never drift from the first paint.
+     */
+    private function examListData(): array
     {
         $completedExamIds = ExamAttempt::active()
             ->where('user_id', Auth::id())
@@ -158,7 +163,45 @@ class StudentController extends Controller
             ->orderBy('started_at')
             ->first();
 
-        return view('student.exams', compact('activeExams', 'openAttempt'));
+        return compact('activeExams', 'openAttempt');
+    }
+
+    public function exams()
+    {
+        return view('student.exams', $this->examListData());
+    }
+
+    /**
+     * The exam list as the student's open page should now see it.
+     *
+     * Hashing the rendered partial rather than the model state is deliberate:
+     * there is no second definition of "what counts as a change" to keep in step
+     * with the view, so an admin editing a name, a time limit, a bank quota or
+     * is_active all reach the student through the same one line.
+     */
+    public function examsState(Request $request)
+    {
+        return $this->fragmentState($request, 'student.partials.exam-list', $this->examListData());
+    }
+
+    /**
+     * Shared body of the live-poll endpoints. Answers with the fragment only
+     * when the caller's hash is stale, so an idle poll costs a few bytes.
+     */
+    private function fragmentState(Request $request, string $partial, array $data)
+    {
+        $html = view($partial, $data)->render();
+        $version = sha1($html);
+
+        if ($request->query('v') === $version) {
+            return response()->json(['changed' => false]);
+        }
+
+        return response()->json([
+            'changed' => true,
+            'v' => $version,
+            'html' => $html,
+        ]);
     }
 
     /**
@@ -216,15 +259,18 @@ class StudentController extends Controller
                     'error',
                     "You already have \"{$e->openAttempt->exam->exam_name}\" in progress. Finish and submit it before starting another exam."
                 );
+            } catch (ExamClosedException $e) {
+                // An admin deactivated the exam between this request's is_active
+                // check and generation taking the row lock. Nothing is wrong -
+                // the list will simply no longer show it.
+                return redirect()->route('student.exams')->with('error', 'This exam is currently not active.');
             } catch (\RuntimeException $e) {
                 \Log::error('Exam generation failed for exam ID ' . $exam->id . ': ' . $e->getMessage());
                 return redirect()->route('student.exams')->with('error', 'This exam could not be started right now. Please contact your administrator.');
             }
         }
 
-        $remainingSeconds = $attempt->expires_at
-            ? max(0, (int) now()->diffInSeconds($attempt->expires_at, false))
-            : null;
+        $remainingSeconds = $attempt->remainingSeconds();
 
         // questionBank comes along for the sidebar's per-bank grouping and the
         // bank tag on each question card.
@@ -241,12 +287,32 @@ class StudentController extends Controller
      * SESSION_LIFETIME and be logged out mid-exam. Touching any route refreshes
      * the session; the current token is returned so the page can refresh its
      * forms if the session was rebuilt in the meantime.
+     *
+     * It doubles as the clock's re-sync channel: the page also pings this when
+     * the tab regains focus or the connection comes back, which is exactly when
+     * its own countdown is most likely to have drifted.
      */
     public function keepAlive()
     {
+        // inProgress() rather than a plain active() lookup: it is the attempt
+        // the student is actually sitting, and its expiry arm keeps matching
+        // through the grace period - exactly the window where the page is
+        // counting down to its auto-submit and most needs the real figure.
+        $attempt = ExamAttempt::inProgress()
+            ->where('user_id', Auth::id())
+            ->with('exam')
+            ->first();
+
         return response()->json([
             'ok' => true,
             'token' => csrf_token(),
+            'remaining_seconds' => $attempt?->remainingSeconds(),
+            // Defence in depth rather than an expected state: toggleExamStatus
+            // refuses to deactivate an exam anyone is sitting, so this only goes
+            // false if that guard is bypassed (direct SQL, a future code path).
+            // The page shows a banner and keeps accepting answers - a student's
+            // half-finished work is not something to discard over it.
+            'exam_active' => $attempt?->exam?->is_active,
         ]);
     }
 
@@ -298,7 +364,11 @@ class StudentController extends Controller
                 ->where('exam_attempt_question_id', $attemptQuestion->id)
                 ->delete();
 
-            return response()->json(['success' => true, 'cleared' => true]);
+            return response()->json([
+                'success' => true,
+                'cleared' => true,
+                'remaining_seconds' => $attempt->remainingSeconds(),
+            ]);
         }
 
         ExamAttemptAnswer::updateOrCreate(
@@ -306,7 +376,12 @@ class StudentController extends Controller
             ['selected_answer_ids' => array_values($answerIds)]
         );
 
-        return response()->json(['success' => true]);
+        // Autosave is the most frequent round trip on the page, so it carries
+        // the authoritative clock along for free.
+        return response()->json([
+            'success' => true,
+            'remaining_seconds' => $attempt->remainingSeconds(),
+        ]);
     }
 
     public function logEvent(Request $request, $examId)
@@ -378,7 +453,13 @@ class StudentController extends Controller
         $questionsById = $attemptQuestions->map->question->keyBy('id');
         $attemptQuestionsByQuestionId = $attemptQuestions->keyBy('question_id');
 
-        // Build validation rules dynamically based on question types
+        // Build validation rules dynamically based on question types.
+        //
+        // Every answer is nullable: a student is allowed to hand in a partly
+        // blank paper, exactly like on paper. Skipped questions simply score
+        // nothing. What is still validated is the shape of anything actually
+        // sent - a position outside the question's own option range, or a file
+        // of the wrong type or size, is rejected as before.
         $rules = [];
         $mcqQuestions = 0;
         $fileUploadQuestions = 0;
@@ -389,22 +470,19 @@ class StudentController extends Controller
                 $allowedExtensions = implode(',', $question->getAllowedExtensions());
                 $maxSizeMb = $question->getMaxFileSize();
 
-                $fileRule = $isExpired ? 'nullable' : 'required';
-                $rules["file_uploads.{$question->id}"] = "{$fileRule}|file|mimes:{$allowedExtensions}|max:" . ($maxSizeMb * 1024);
+                $rules["file_uploads.{$question->id}"] = "nullable|file|mimes:{$allowedExtensions}|max:" . ($maxSizeMb * 1024);
             } else {
                 // Answers arrive as positions in this attempt's shuffled option
                 // order, so the bound is the option count - not an answers.id.
                 $lastPosition = max(0, $attemptQuestionsByQuestionId[$question->id]
                     ->orderedAnswers()->count() - 1);
 
+                $mcqQuestions++;
+
                 if ($question->question_type === 'single') {
-                    $mcqQuestions++;
-                    $answerRule = $isExpired ? 'nullable' : 'required';
-                    $rules["answers.{$question->id}"] = "{$answerRule}|integer|min:0|max:{$lastPosition}";
+                    $rules["answers.{$question->id}"] = "nullable|integer|min:0|max:{$lastPosition}";
                 } else { // multiple choice
-                    $mcqQuestions++;
-                    $answerRule = $isExpired ? 'nullable|array' : 'required|array|min:1';
-                    $rules["answers.{$question->id}"] = $answerRule;
+                    $rules["answers.{$question->id}"] = 'nullable|array';
                     $rules["answers.{$question->id}.*"] = "integer|min:0|max:{$lastPosition}";
                 }
             }
@@ -535,6 +613,8 @@ class StudentController extends Controller
 
         // Store file uploads - never accepted once the deadline has passed, since
         // there's no autosaved snapshot of a file the way there is for MCQ answers.
+        $uploadedQuestionIds = [];
+
         if (!$isExpired && $request->has('file_uploads')) {
             foreach ($request->file('file_uploads') as $questionId => $uploadedFile) {
                 if ($uploadedFile && $uploadedFile->isValid()) {
@@ -557,28 +637,31 @@ class StudentController extends Controller
                         'file_mime_type' => $uploadedFile->getMimeType(),
                         'is_graded' => false
                     ]);
+
+                    $uploadedQuestionIds[] = (int) $questionId;
                 }
             }
         }
 
-        if ($isExpired) {
-            // A file-upload question the student never got to before time ran out
-            // otherwise has no StudentAnswer row at all, and admin grading has
-            // nothing to show or grade for it.
-            foreach ($questionsById as $question) {
-                if ($question->question_type !== 'file_upload') {
-                    continue;
-                }
-
-                StudentAnswer::create([
-                    'exam_result_id' => $examResult->id,
-                    'question_id' => $question->id,
-                    'answer_id' => null,
-                    'file_path' => null,
-                    'admin_feedback' => 'File not submitted before time limit.',
-                    'is_graded' => false,
-                ]);
+        // A file-upload question with no file stored - skipped outright, or never
+        // reached before time ran out - otherwise has no StudentAnswer row at
+        // all, and admin grading has nothing to show or grade for it.
+        foreach ($questionsById as $question) {
+            if ($question->question_type !== 'file_upload'
+                || in_array($question->id, $uploadedQuestionIds, true)) {
+                continue;
             }
+
+            StudentAnswer::create([
+                'exam_result_id' => $examResult->id,
+                'question_id' => $question->id,
+                'answer_id' => null,
+                'file_path' => null,
+                'admin_feedback' => $isExpired
+                    ? 'File not submitted before time limit.'
+                    : 'File not submitted.',
+                'is_graded' => false,
+            ]);
         }
 
         $attempt->update(['completed_at' => now()]);
@@ -681,14 +764,32 @@ class StudentController extends Controller
         return redirect()->route('student.profile')->with('success', 'Your password has been changed.');
     }
 
-    public function myResults()
+    /**
+     * Everything student.partials.result-list renders. Shared with
+     * myResultsState() for the same reason as examListData().
+     */
+    private function resultListData(): array
     {
         $examResults = ExamResult::where('user_id', Auth::id())
             ->with(['exam', 'studentAnswers'])
             ->orderBy('submitted_at', 'desc')
             ->get();
 
-        return view('student.my-results', compact('examResults'));
+        return compact('examResults');
+    }
+
+    public function myResults()
+    {
+        return view('student.my-results', $this->resultListData());
+    }
+
+    /**
+     * The results list as the student's open page should now see it - chiefly so
+     * a score replaces "Grading Pending" as soon as an admin marks a file answer.
+     */
+    public function myResultsState(Request $request)
+    {
+        return $this->fragmentState($request, 'student.partials.result-list', $this->resultListData());
     }
 
     /**

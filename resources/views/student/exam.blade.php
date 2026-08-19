@@ -132,8 +132,7 @@
                                                id="file_upload_{{ $question->id }}" 
                                                name="file_uploads[{{ $question->id }}]"
                                                accept=".{{ implode(',.',$question->getAllowedExtensions()) }}"
-                                               data-question="{{ $question->id }}"
-                                               required>
+                                               data-question="{{ $question->id }}">
                                         @error('file_uploads.' . $question->id)
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -205,14 +204,14 @@
                                 </div>
                             </div>
                             
-                            <button type="button" class="btn btn-success btn-lg" id="submitBtn" disabled data-bs-toggle="modal" data-bs-target="#confirmSubmitModal">
+                            <button type="button" class="btn btn-success btn-lg" id="submitBtn" data-bs-toggle="modal" data-bs-target="#confirmSubmitModal">
                                 <i class="fas fa-paper-plane me-2"></i>
                                 Submit Exam
                             </button>
-                            
+
                             <div class="mt-2">
                                 <small class="text-muted" id="submit-warning">
-                                    Please answer all questions to enable submission
+                                    You can submit at any time - unanswered questions score nothing
                                 </small>
                             </div>
                         </div>
@@ -281,6 +280,10 @@
                         <li>Your exam will be automatically graded</li>
                     </ul>
                 </div>
+                <div class="alert alert-warning d-none" role="alert" id="modal-unanswered-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong><span id="modal-unanswered-count">0</span></strong> question(s) are still unanswered and will score nothing.
+                </div>
                 <p class="text-muted text-center">
                     Please review your answers before proceeding.
                 </p>
@@ -326,10 +329,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('examForm');
-    const submitBtn = document.getElementById('submitBtn');
     const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
     const answeredCountSpan = document.getElementById('answered-count');
     const modalAnsweredCountSpan = document.getElementById('modal-answered-count');
+    const modalUnansweredCountSpan = document.getElementById('modal-unanswered-count');
+    const modalUnansweredWarning = document.getElementById('modal-unanswered-warning');
     const progressBar = document.getElementById('progress-bar');
     const submitWarning = document.getElementById('submit-warning');
     const mapButtons = Array.from(document.querySelectorAll('.ps-qmap-btn'));
@@ -377,19 +381,20 @@ document.addEventListener('DOMContentLoaded', function() {
         progressBar.style.width = percentage + '%';
         progressBar.setAttribute('aria-valuenow', percentage);
         
-        // Enable/disable submit button
-        if (answeredCount === totalQuestions) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('btn-secondary');
-            submitBtn.classList.add('btn-success');
+        // Submitting is always allowed - a student who wants to hand in a partly
+        // blank paper may, exactly like on paper. The count is surfaced here and
+        // again in the confirm modal so it is never an accident.
+        const unansweredCount = totalQuestions - answeredCount;
+
+        modalUnansweredCountSpan.textContent = unansweredCount;
+        modalUnansweredWarning.classList.toggle('d-none', unansweredCount === 0);
+
+        if (unansweredCount === 0) {
             submitWarning.textContent = 'All questions answered. You can now submit the exam.';
             submitWarning.classList.remove('text-muted');
             submitWarning.classList.add('text-success');
         } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.remove('btn-success');
-            submitBtn.classList.add('btn-secondary');
-            submitWarning.textContent = 'Please answer all questions to enable submission';
+            submitWarning.textContent = unansweredCount + ' question(s) unanswered - you can still submit, but they will score nothing.';
             submitWarning.classList.remove('text-success');
             submitWarning.classList.add('text-muted');
         }
@@ -491,6 +496,13 @@ document.addEventListener('DOMContentLoaded', function() {
         connectionLabel.textContent = label;
     }
 
+    // Set by the countdown below when the exam is timed; stays null otherwise.
+    // Every response that carries the server's remaining_seconds routes through
+    // here, so the clock the student sees is corrected by ordinary traffic
+    // instead of trusting a setInterval that browsers throttle in background
+    // tabs and that stops entirely while a laptop is asleep.
+    let onServerClock = null;
+
     // timeoutMs is optional and only used by the fast last-ditch path below -
     // routine autosave calls this with no timeout, unchanged from before.
     // fetch() alone never times out on a merely-slow connection, so without
@@ -514,6 +526,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const err = new Error('autosave failed: ' + response.status);
                 err.status = response.status;
                 throw err;
+            }
+            return response.json().catch(() => null);
+        }).then(data => {
+            if (data && onServerClock) {
+                onServerClock(data.remaining_seconds);
             }
         }).finally(() => {
             if (timeoutId) clearTimeout(timeoutId);
@@ -759,12 +776,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // Without this, an idle stretch longer than SESSION_LIFETIME expires the
     // session and the final submit dies on a CSRF mismatch, losing the attempt.
     const keepAliveUrl = @json(route('student.keep-alive'));
+    const KEEP_ALIVE_MIN_GAP_MS = 10000;
+    let lastKeepAliveAt = 0;
 
-    setInterval(function () {
+    function showExamClosedBanner() {
+        if (document.getElementById('examClosedBanner')) return;
+
+        const banner = document.createElement('div');
+        banner.id = 'examClosedBanner';
+        banner.className = 'alert alert-warning';
+        banner.setAttribute('role', 'alert');
+        banner.innerHTML =
+            '<i class="fas fa-triangle-exclamation me-2"></i>' +
+            '<strong>Bu imtahan administrator tərəfindən dayandırıldı.</strong> ' +
+            'Cavablarınız saxlanılır — işinizi bitirib təqdim edə bilərsiniz.';
+
+        document.querySelector('.container, main, body').prepend(banner);
+    }
+
+    function pingKeepAlive() {
+        // Refocus and reconnect can both fire in a burst (and repeatedly while
+        // a student alt-tabs), so the event-driven calls are throttled - the
+        // 5-minute interval below is what guarantees the session stays warm.
+        const now = Date.now();
+        if (now - lastKeepAliveAt < KEEP_ALIVE_MIN_GAP_MS) return;
+        lastKeepAliveAt = now;
+
         fetch(keepAliveUrl, { headers: { 'Accept': 'application/json' } })
             .then(response => response.ok ? response.json() : null)
             .then(data => {
-                if (!data || !data.token) return;
+                if (!data) return;
+                if (onServerClock) {
+                    onServerClock(data.remaining_seconds);
+                }
+                // Should never fire: an admin cannot deactivate an exam anyone is
+                // sitting. If it does, the guard was bypassed - say so, but do not
+                // block answering or submitting and throw away half an exam.
+                if (data.exam_active === false) {
+                    showExamClosedBanner();
+                }
+                if (!data.token) return;
                 // The session may have been rebuilt (e.g. laptop slept through
                 // the interval); adopt whatever token is now current.
                 csrfMeta.setAttribute('content', data.token);
@@ -773,8 +824,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .catch(() => {});
-    }, 300000);
-    
+    }
+
+    setInterval(pingKeepAlive, 300000);
+
+    // The two moments the local countdown is most likely to have fallen behind
+    // the server: the tab was in the background (interval throttled or the
+    // machine suspended), or the connection dropped and came back.
+    window.addEventListener('online', pingKeepAlive);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            pingKeepAlive();
+        }
+    });
+
     // Handle modal confirmation
     confirmSubmitBtn.addEventListener('click', function() {
         // Close the modal
@@ -791,6 +854,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Exam countdown timer
     @if($exam->time_limit_minutes)
         let remainingSeconds = {{ (int) $remainingSeconds }};
+        // The countdown is driven off a fixed deadline rather than by
+        // subtracting 1 per tick: a throttled or skipped interval then costs
+        // nothing, because each tick re-derives the remaining time instead of
+        // accumulating whatever the browser actually delivered. The deadline is
+        // anchored once from the server's reading, so changing the machine
+        // clock mid-exam has no effect either.
+        let deadline = Date.now() + remainingSeconds * 1000;
         const timerEl = document.getElementById('exam-timer');
         const timerBar = document.getElementById('timer-bar');
         const autoSubmitInput = document.getElementById('auto_submit');
@@ -798,13 +868,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let autoSubmitted = false;
 
         // The server won't treat this attempt as expired until expires_at plus
-        // its own grace period (ExamAttempt::isExpired()) - submitting before
-        // that window closes fails "required" validation on whatever wasn't
-        // answered yet and bounces back to this same page, which looked like
-        // an infinite reload loop right as the clock hit zero. Waiting out the
-        // grace period (plus a small buffer for this request's own transit
-        // time) before actually submitting means the server always agrees the
-        // attempt is over by the time the request lands.
+        // its own grace period (ExamAttempt::isExpired()), and only an attempt
+        // it agrees is over gets scored from the frozen autosave snapshot
+        // instead of this request's body. Waiting out the grace period (plus a
+        // small buffer for the request's own transit time) is what puts an
+        // expiry-triggered submit on that path, so answers can't be edited or
+        // replayed in the submit body after time is up.
         const gracePeriodSeconds = {{ (int) config('exam.grace_period_seconds', 30) }};
         const AUTO_SUBMIT_BUFFER_SECONDS = 3;
 
@@ -870,19 +939,35 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        function tick() {
+            remainingSeconds = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+            renderTimer();
+
+            if (remainingSeconds <= 0) {
+                autoSubmitExam();
+            }
+        }
+
+        // The server is the only authority on when this attempt ends, so any
+        // response carrying its reading re-anchors the deadline. Small gaps are
+        // just request latency and are ignored - correcting on those would make
+        // the visible clock jitter by a second on every autosave.
+        const CLOCK_SYNC_TOLERANCE_SECONDS = 2;
+
+        onServerClock = function (serverSeconds) {
+            if (typeof serverSeconds !== 'number' || autoSubmitted) return;
+            if (Math.abs(serverSeconds - remainingSeconds) <= CLOCK_SYNC_TOLERANCE_SECONDS) return;
+
+            deadline = Date.now() + serverSeconds * 1000;
+            tick();
+        };
+
         renderTimer();
 
         if (remainingSeconds <= 0) {
             autoSubmitExam();
         } else {
-            timerInterval = setInterval(function () {
-                remainingSeconds--;
-                renderTimer();
-
-                if (remainingSeconds <= 0) {
-                    autoSubmitExam();
-                }
-            }, 1000);
+            timerInterval = setInterval(tick, 1000);
         }
     @endif
 });

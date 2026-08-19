@@ -16,6 +16,7 @@ use App\Models\ExamAttemptQuestion;
 use App\Models\ExamResult;
 use App\Models\Question;
 use App\Models\QuestionBank;
+use App\Models\StudentAnswer;
 use App\Models\User;
 
 /**
@@ -186,19 +187,38 @@ it('marks the attempt completed and clears its drafts', function () {
     expect($seed['attempt']->fresh()->completed_at)->not->toBeNull();
 });
 
-it('rejects a submission that leaves a question unanswered', function () {
+it('accepts a submission that leaves a question unanswered', function () {
     $user = User::factory()->create();
     $seed = seedAttempt($user, [
         ['type' => 'single', 'options' => 4, 'correct' => [0]],
         ['type' => 'single', 'options' => 4, 'correct' => [0]],
     ]);
 
-    $response = submitAnswers($user, $seed['exam'], [
+    // Handing in a partly blank paper is allowed - the blank question simply
+    // scores nothing, it does not block the submission.
+    submitAnswers($user, $seed['exam'], [
         'answers' => [$seed['questions'][0]['question']->id => 0],
     ]);
 
-    $response->assertSessionHasErrors();
-    expect(ExamResult::count())->toBe(0);
+    $result = ExamResult::first();
+
+    expect($result)->not->toBeNull()
+        ->and($result->total_questions)->toBe(2)
+        ->and($result->correct_answers)->toBe(1)
+        ->and(StudentAnswer::where('exam_result_id', $result->id)->count())->toBe(1);
+});
+
+it('accepts a submission with no answers at all', function () {
+    $user = User::factory()->create();
+    $seed = seedAttempt($user, [
+        ['type' => 'single', 'options' => 4, 'correct' => [0]],
+        ['type' => 'multiple', 'options' => 4, 'correct' => [0, 1]],
+    ]);
+
+    submitAnswers($user, $seed['exam'], []);
+
+    expect(ExamResult::first()?->correct_answers)->toBe(0)
+        ->and($seed['attempt']->fresh()->completed_at)->not->toBeNull();
 });
 
 /*

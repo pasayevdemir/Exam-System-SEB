@@ -564,14 +564,13 @@ h1.h3 {
 
 /* ── Exam timer ── */
 
-.exam-timer {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 1000;
-}
-
 .ps-timer-bar {
+    /* A candidate can only pace themselves if the clock never leaves the
+       viewport, so the bar sticks to the top for the whole scroll. The navbar
+       is static and .card sets no overflow, so top: 0 needs no offset. */
+    position: sticky;
+    top: 0;
+    z-index: 1020;
     background-color: var(--ps-navy) !important;
     border-bottom: 1px solid var(--ps-navy-light) !important;
     transition: background-color 0.5s ease;
@@ -590,6 +589,12 @@ h1.h3 {
 @keyframes timerPulse {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.75; }
+}
+
+/* The question map scrolls cards to the top of the viewport, where the sticky
+   timer bar would otherwise cover the question heading. */
+[id^="question-card-"] {
+    scroll-margin-top: 60px;
 }
 
 /* ── Exam question map (right sidebar) ── */
@@ -622,18 +627,18 @@ h1.h3 {
 
 .ps-qmap-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+    gap: 8px;
 }
 
 .ps-qmap-btn {
     aspect-ratio: 1;
-    min-height: 38px;
+    min-height: 26px;
     border: 1px solid var(--ps-border);
     border-radius: var(--ps-radius-sm);
     background: var(--ps-surface);
     color: var(--ps-muted);
-    font-size: 0.85rem;
+    font-size: .65rem;
     font-weight: 600;
     transition: var(--ps-transition);
 }
@@ -878,13 +883,6 @@ h1.h3 {
 
 @media (max-width: 768px) {
     .questions-container { max-height: 400px; }
-
-    .exam-timer {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-bottom: 20px;
-    }
 
     .login-card {
         margin: 1rem;

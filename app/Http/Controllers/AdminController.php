@@ -126,7 +126,11 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        // sitting_count drives the Deactivate button's disabled state, so it has
+        // to be counted the same way toggleExamStatus refuses: inProgress(), not
+        // a plain attempt count.
         $exams = Exam::with('examQuestionBanks')
+                    ->withCount(['attempts as sitting_count' => fn ($q) => $q->inProgress()])
                     ->orderBy('created_at', 'desc')
                     ->paginate(6);
 
@@ -831,13 +835,46 @@ class AdminController extends Controller
         );
     }
 
+    /**
+     * Activating is always allowed. Deactivating is not, while students are
+     * mid-exam: is_active is only read when the exam page loads, so flipping it
+     * under a sitting candidate does not stop them cleanly - it just strands the
+     * attempt, since they can still answer but can no longer re-enter the page
+     * if anything interrupts them. Deactivation means "no new starts", and the
+     * only safe moment for it is when nobody is inside.
+     */
     public function toggleExamStatus($examId)
     {
-        $exam = Exam::findOrFail($examId);
-        $exam->update(['is_active' => !$exam->is_active]);
-        
-        $status = $exam->is_active ? 'activated' : 'deactivated';
-        return redirect()->route('admin.dashboard')->with('success', "Exam {$status} successfully!");
+        $result = DB::transaction(function () use ($examId) {
+            // Locked for the same read-then-write race deleteExam documents: the
+            // count below is worthless if a student can start between reading it
+            // and writing is_active. ExamGenerationService takes this same row
+            // and re-reads is_active under it, so the two orders are the only
+            // two outcomes - the start is refused, or the deactivation is.
+            $exam = Exam::lockForUpdate()->findOrFail($examId);
+
+            if ($exam->is_active) {
+                // inProgress() rather than active(): an expired or abandoned
+                // attempt must not block an admin forever. That scope's expiry
+                // arm (grace period included) releases those on its own.
+                $sitting = ExamAttempt::inProgress()->where('exam_id', $exam->id)->count();
+
+                if ($sitting > 0) {
+                    return ['error', "Cannot deactivate \"{$exam->exam_name}\": {$sitting} student(s) "
+                        . 'are sitting it right now. Wait until they submit, or their time runs out.'];
+                }
+            }
+
+            $exam->update(['is_active' => !$exam->is_active]);
+
+            $status = $exam->is_active ? 'activated' : 'deactivated';
+
+            return ['success', "Exam {$status} successfully!"];
+        });
+
+        [$key, $message] = $result;
+
+        return redirect()->route('admin.dashboard')->with($key, $message);
     }
 
     public function examBanks($examId)

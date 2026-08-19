@@ -11,6 +11,7 @@
 namespace App\Services;
 
 use App\Exceptions\ConcurrentExamAttemptException;
+use App\Exceptions\ExamClosedException;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamAttemptQuestion;
@@ -41,6 +42,16 @@ class ExamGenerationService
             // student's own row first makes the second request wait and then see
             // the first one's attempt.
             DB::table('users')->where('id', $user->id)->lockForUpdate()->first();
+
+            // The exam row too, and then re-read is_active under the lock. The
+            // controller checked it, but outside any transaction: without this,
+            // a Start that lands exactly as an admin deactivates the exam slips
+            // past both guards and strands an attempt on a closed exam. Ordering
+            // against AdminController::toggleExamStatus is now decided by the
+            // lock - whichever transaction gets the row first wins outright.
+            if (! DB::table('exams')->where('id', $exam->id)->lockForUpdate()->value('is_active')) {
+                throw new ExamClosedException($exam);
+            }
 
             $openAttempt = ExamAttempt::inProgress()
                 ->where('user_id', $user->id)

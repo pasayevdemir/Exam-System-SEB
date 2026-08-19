@@ -87,11 +87,21 @@
                                 Edit
                             </a>
                             
-                            <form action="{{ route('admin.toggle-status', $exam->id) }}" method="POST" class="d-inline">
+                            @php
+                                // Deactivating strands anyone mid-exam, so the server refuses it
+                                // while sitting_count > 0. Disabling here just shows why up front.
+                                $blockedBySitters = $exam->is_active && $exam->sitting_count > 0;
+                            @endphp
+                            <form action="{{ route('admin.toggle-status', $exam->id) }}" method="POST" class="d-inline"
+                                  @if($blockedBySitters) title="{{ $exam->sitting_count }} student(s) are sitting this exam right now" @endif>
                                 @csrf
-                                <button type="submit" class="btn btn-sm {{ $exam->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}">
+                                <button type="submit" class="btn btn-sm {{ $exam->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}"
+                                        @if($blockedBySitters) disabled @endif>
                                     <i class="fas {{ $exam->is_active ? 'fa-pause' : 'fa-play' }} me-1"></i>
                                     {{ $exam->is_active ? 'Deactivate' : 'Activate' }}
+                                    @if($blockedBySitters)
+                                        <span class="badge bg-warning text-dark ms-1">{{ $exam->sitting_count }}</span>
+                                    @endif
                                 </button>
                             </form>
                             

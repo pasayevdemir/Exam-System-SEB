@@ -18,32 +18,28 @@
             <div class="alert alert-warning">{{ session('error') }}</div>
         @endif
 
-        @if ($examResults->isEmpty())
-            <div class="alert alert-info">You haven't completed any exams yet.</div>
-        @else
-            <div class="list-group">
-                @foreach ($examResults as $examResult)
-                    <a href="{{ route('student.show-result', $examResult->id) }}"
-                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ $examResult->exam->exam_name }}</strong>
-                            <div class="text-muted small">
-                                Submitted: {{ $examResult->submitted_at->format('M d, Y H:i') }}
-                            </div>
-                        </div>
-                        @if ($examResult->hasGradingPending())
-                            <span class="badge bg-warning fs-6">
-                                <i class="fas fa-clock me-1"></i>Grading Pending
-                            </span>
-                        @else
-                            <span class="badge bg-primary fs-6">
-                                {{ $examResult->score }}/{{ $examResult->total_questions }}
-                            </span>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-        @endif
+        @php
+            // Same first-paint-and-hash arrangement as the exams page.
+            $resultListHtml = view('student.partials.result-list', compact('examResults'))->render();
+        @endphp
+        <div id="resultListLive" data-v="{{ sha1($resultListHtml) }}">{!! $resultListHtml !!}</div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // A pending file submission turns into a score the moment an admin grades
+    // it; without this the student sits on "Grading Pending" until they reload.
+    const listEl = document.getElementById('resultListLive');
+    if (!listEl || typeof window.psLivePoll !== 'function') return;
+
+    window.psLivePoll({
+        url: @json(route('student.my-results-state')),
+        version: listEl.dataset.v,
+        target: listEl,
+    });
+});
+</script>
 @endsection

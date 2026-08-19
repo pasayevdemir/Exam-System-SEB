@@ -98,6 +98,17 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::put('/profile', [StudentController::class, 'updateProfile'])->name('update-profile');
         Route::put('/profile/password', [StudentController::class, 'updatePassword'])->name('update-password');
         Route::get('/my-results', [StudentController::class, 'myResults'])->name('my-results');
+
+        // Live-poll endpoints for the two list pages, so an admin activating an
+        // exam or grading a submission reaches an open student page without a
+        // reload. Deliberately outside the `seb` group below, matching the pages
+        // they refresh — a student watching the list is not sitting an exam yet.
+        //
+        // Declared before /my-results/{examResult}: registered the other way
+        // round, `state` binds as an ExamResult id and 404s.
+        Route::get('/exams/state', [StudentController::class, 'examsState'])->name('exams-state');
+        Route::get('/my-results/state', [StudentController::class, 'myResultsState'])->name('my-results-state');
+
         Route::get('/my-results/{examResult}', [StudentController::class, 'showResult'])->name('show-result');
 
         // Actually taking an exam requires Safe Exam Browser -
