@@ -1,0 +1,94 @@
+# Deploys main to production (exam.peerstack.online).
+#
+# This repository is PUBLIC. Never add a `pull_request` trigger and never move
+# this job to a self-hosted runner: either one would let a fork's code run with
+# access to the deploy path.
+#
+# The workflow holds no deploy logic of its own. It opens one SSH connection,
+# and the key it uses is pinned server-side to a forced command
+# (/usr/local/sbin/exam-deploy), so the command sent here is irrelevant - the
+# server decides what runs. Changing how a deploy works means editing that
+# script on the server, not this file; that way a broken deploy can still be
+# fixed without needing a deploy to land first.
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once, and never cancel one midway - an interrupted
+# deploy could leave the server between a pulled commit and a built image.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          test -n "$DEPLOY_SSH_KEY" || { echo "::error::DEPLOY_SSH_KEY secret is not set"; exit 1; }
+          test -n "$DEPLOY_KNOWN_HOSTS" || { echo "::error::DEPLOY_KNOWN_HOSTS secret is not set"; exit 1; }
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned host key rather than StrictHostKeyChecking=no: without this the
+          # very first connection would trust whatever answers on that address.
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Run deploy
+        id: deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set +e
+          ssh -i ~/.ssh/deploy_key \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=20 \
+              -p 22 "root@${DEPLOY_HOST}" 2>&1 | tee deploy-output.txt
+          # tee is last in the pipe, so ask the shell for ssh's status instead.
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Interpret result
+        run: |
+          status="${{ steps.deploy.outputs.status }}"
+          {
+            echo "### Production deploy"
+            echo
+            echo '```'
+            cat deploy-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          case "$status" in
+            0)
+              echo "Deploy succeeded."
+              ;;
+            75)
+              # EX_TEMPFAIL: the server refused on purpose - an exam is in flight
+              # or another deploy holds the lock. Nothing is broken, so this must
+              # not show up as a red build; re-run once the exam is over.
+              echo "::warning::Deploy deferred by the server (exam in progress or lock held). Re-run this workflow when it is clear."
+              echo "Deploy deferred - see the summary above." >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            *)
+              echo "::error::Deploy failed with status $status. The server attempted a rollback - check the output above."
+              exit 1
+              ;;
+          esac
+
+      - name: Remove key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

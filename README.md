@@ -424,6 +424,59 @@ ls -la storage/
 ls -la public/storage/
 ```
 
+## 🚢 Production Deployment
+
+Pushing to `main` deploys to production automatically. There is nothing to run by hand.
+
+```
+push to main  →  .github/workflows/deploy.yml  →  ssh  →  /usr/local/sbin/exam-deploy
+```
+
+The workflow carries **no deploy logic**. It opens a single SSH connection using a key that the
+server pins to a forced command, so whatever the client sends is ignored and the server always runs
+`/usr/local/sbin/exam-deploy`. Deploy behaviour is changed by editing that script on the server —
+which also means a broken deploy can be fixed without first landing a deploy.
+
+### What the server does on each run
+
+1. Takes a non-blocking lock, so two pushes can never deploy at once
+2. Re-asserts that `/var/www/exam` is owned by `exam` (a stray root-owned file breaks `git pull`)
+3. **Refuses to deploy while an exam attempt is in flight** — recreating the container would drop a
+   student's session mid-exam
+4. Dumps the database and `.env` to `/home/exam/backups/<timestamp>/`, keeping the last 10
+5. Pulls `--ff-only`, rebuilds the image, restarts, runs `migrate --force`
+6. Re-creates the `storage` symlink and rebuilds the config/route/view caches as `www-data`
+7. Health-checks the site, and **rolls back to the previous commit and image if anything fails**
+
+### Deploy outcomes in GitHub Actions
+
+| Result | Meaning |
+| --- | --- |
+| ✅ green | Deployed, health check passed |
+| ⚠️ warning | **Deferred on purpose** — an exam was in progress or a deploy was already running. Nothing is broken; re-run the workflow when the exam ends |
+| ❌ red | Deploy failed and the server rolled back. Read the job summary for the server-side log |
+
+To deploy without pushing (for example after a deferral), use **Actions → Deploy to production →
+Run workflow**.
+
+### Required repository secrets
+
+| Secret | Value |
+| --- | --- |
+| `DEPLOY_SSH_KEY` | Private half of the `exam-deploy-ci` ed25519 key |
+| `DEPLOY_HOST` | Production server address |
+| `DEPLOY_KNOWN_HOSTS` | `ssh-keyscan` output for that host, so the runner pins the host key |
+
+> This repository is public. Never add a `pull_request` trigger to the deploy workflow and never
+> move the job to a self-hosted runner — either would let a fork's code reach the deploy path.
+
+### Logs and backups on the server
+
+```bash
+tail -50 /home/exam/backups/deploy.log   # what every deploy did
+ls -1 /home/exam/backups/                # timestamped DB + .env snapshots
+```
+
 ## ⚠️ Current Limitations & Considerations
 
 ### Known Limitations
