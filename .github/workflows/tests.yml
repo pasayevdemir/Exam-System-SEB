@@ -56,11 +56,9 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      # No `pint --test` gate yet: the existing tree predates pint.json and
-      # reports on ~100 files, most of it line endings, so turning it on as a
-      # blocking check would mean a repo-wide reformat first — a call for the
-      # maintainer, not for this workflow. pint.json is committed so
-      # `./vendor/bin/pint --dirty` works locally in the meantime.
+      - name: Check formatting
+        run: ./vendor/bin/pint --test
+
       - name: Run static analysis
         run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=512M
 

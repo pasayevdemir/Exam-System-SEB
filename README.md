@@ -130,6 +130,27 @@ A comprehensive Laravel-based online examination platform designed for education
     - **Admin Login**: http://127.0.0.1:8000/admin/login
     - **Check Results**: http://127.0.0.1:8000/check-results
 
+9. **Opt into the blame ignore list** (once per clone):
+
+    ```bash
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+    ```
+
+    Formatting-only commits are listed there, so `git blame` reports whoever
+    last changed a line's meaning rather than whoever last reformatted it.
+    GitHub's blame view applies the file on its own.
+
+### Checks
+
+CI runs these on every push and pull request; run them locally before pushing:
+
+```bash
+./vendor/bin/pint --test                    # formatting (use --dirty to fix only your changes)
+./vendor/bin/phpstan analyse                # static analysis, level 5
+php artisan test                            # feature suite
+npm run build                               # asset build
+```
+
 ## 🔑 Default Admin Credentials
 
 -   **Username**: `sitcexm-admin`
