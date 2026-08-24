@@ -217,12 +217,6 @@ parameters:
 			path: app/Http/Controllers/StudentController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\ExamAttemptQuestion\:\:\$question\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/ExamAttemptQuestion.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
 			identifier: property.notFound
 			count: 1
@@ -421,12 +415,6 @@ parameters:
 			path: tests/Feature/PasswordGatedDeletionTest.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
-			identifier: property.notFound
-			count: 1
-			path: tests/Feature/QuestionCreationTest.php
-
-		-
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -439,22 +427,10 @@ parameters:
 			path: tests/Feature/QuestionCreationTest.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
-			identifier: property.notFound
-			count: 3
-			path: tests/Feature/QuestionEditingTest.php
-
-		-
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: tests/Feature/QuestionEditingTest.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
-			identifier: property.notFound
-			count: 5
-			path: tests/Feature/QuestionImportTest.php
 
 		-
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'

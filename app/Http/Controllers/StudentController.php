@@ -29,6 +29,7 @@ use App\Models\PasswordResetRequest;
 use App\Models\StudentAnswer;
 use App\Models\User;
 use App\Services\ExamGenerationService;
+use App\Services\ExamScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -431,7 +432,7 @@ class StudentController extends Controller
         return redirect()->route('student.exam', $exam->id);
     }
 
-    public function submitExam(Request $request, $examId)
+    public function submitExam(Request $request, $examId, ExamScoringService $scoring)
     {
         $exam = Exam::findOrFail($examId);
 
@@ -453,120 +454,18 @@ class StudentController extends Controller
         // favor of whatever was already autosaved before the deadline.
         $isExpired = $attempt->isExpired();
 
-        $attemptQuestions = $attempt->attemptQuestions()->with(['question.answers', 'draftAnswer'])->get();
+        $attemptQuestions = $scoring->questionsFor($attempt);
         $questionsById = $attemptQuestions->map->question->keyBy('id');
-        $attemptQuestionsByQuestionId = $attemptQuestions->keyBy('question_id');
 
-        // Build validation rules dynamically based on question types.
-        //
-        // Every answer is nullable: a student is allowed to hand in a partly
-        // blank paper, exactly like on paper. Skipped questions simply score
-        // nothing. What is still validated is the shape of anything actually
-        // sent - a position outside the question's own option range, or a file
-        // of the wrong type or size, is rejected as before.
-        $rules = [];
-        $mcqQuestions = 0;
-        $fileUploadQuestions = 0;
+        $request->validate($scoring->rulesFor($attemptQuestions));
 
-        foreach ($questionsById as $question) {
-            if ($question->question_type === 'file_upload') {
-                $fileUploadQuestions++;
-                $allowedExtensions = implode(',', $question->getAllowedExtensions());
-                $maxSizeMb = $question->getMaxFileSize();
+        $submittedAnswers = $scoring->resolveAnswers(
+            $attemptQuestions,
+            $request->input('answers', []),
+            $isExpired
+        );
 
-                $rules["file_uploads.{$question->id}"] = "nullable|file|mimes:{$allowedExtensions}|max:".($maxSizeMb * 1024);
-            } else {
-                // Answers arrive as positions in this attempt's shuffled option
-                // order, so the bound is the option count - not an answers.id.
-                $lastPosition = max(0, $attemptQuestionsByQuestionId[$question->id]
-                    ->orderedAnswers()->count() - 1);
-
-                $mcqQuestions++;
-
-                if ($question->question_type === 'single') {
-                    $rules["answers.{$question->id}"] = "nullable|integer|min:0|max:{$lastPosition}";
-                } else { // multiple choice
-                    $rules["answers.{$question->id}"] = 'nullable|array';
-                    $rules["answers.{$question->id}.*"] = "integer|min:0|max:{$lastPosition}";
-                }
-            }
-        }
-
-        $request->validate($rules);
-
-        // Calculate score for MCQ questions only
-        $correctAnswers = 0;
-        $totalMcqQuestions = $mcqQuestions;
-
-        if ($isExpired) {
-            // The deadline has passed - the only answers that count are whatever
-            // was already autosaved (autosaveAnswer() itself now refuses writes
-            // once expired, so this is a frozen snapshot from before the
-            // deadline). selected_answer_ids already holds real answer ids, not
-            // positions, so no position resolution is needed here.
-            $submittedAnswers = $attemptQuestions
-                ->filter(fn ($aq) => $aq->question->question_type !== 'file_upload')
-                ->mapWithKeys(function ($aq) {
-                    $ids = $aq->draftAnswer->selected_answer_ids ?? [];
-                    $value = $aq->question->question_type === 'single' ? ($ids[0] ?? null) : $ids;
-
-                    return [$aq->question_id => $value];
-                });
-        } else {
-            // Only answers for questions actually served in this attempt count. A
-            // question id the student was never given used to dereference null here
-            // and 500 before any scoring ran.
-            //
-            // Each value is a position in that question's pinned answer_display_order;
-            // resolve it back to a real answer id here so everything downstream keeps
-            // working with ids. Because the position is looked up in its own question's
-            // order, one question's answer can never be submitted for another.
-            $submittedAnswers = collect($request->input('answers', []))
-                ->only($questionsById->keys()->all())
-                ->map(function ($positions, $questionId) use ($attemptQuestionsByQuestionId, $questionsById) {
-                    $order = $attemptQuestionsByQuestionId[$questionId]->orderedAnswers()->pluck('id');
-
-                    $answerIds = collect(is_array($positions) ? $positions : [$positions])
-                        ->unique()
-                        ->map(fn ($position) => $order[$position] ?? null)
-                        ->filter()
-                        ->values();
-
-                    return $questionsById[$questionId]->question_type === 'single'
-                        ? $answerIds->first()
-                        : $answerIds->all();
-                });
-        }
-
-        // Process MCQ answers
-        if ($submittedAnswers->isNotEmpty()) {
-            foreach ($submittedAnswers as $questionId => $answerData) {
-                $question = $questionsById->get($questionId);
-
-                if ($question->question_type === 'single') {
-                    // Single choice: answerData is a single answer ID. The answer
-                    // must belong to the question being scored - without that check
-                    // one known-correct id could be replayed across every question.
-                    $answer = Answer::find($answerData);
-                    if ($answer && $answer->question_id === $question->id && $answer->is_correct) {
-                        $correctAnswers++;
-                    }
-                } else {
-                    // Multiple choice: answerData is an array of answer IDs
-                    // Check if selected answers match exactly with correct answers
-                    $selectedAnswerIds = is_array($answerData) ? $answerData : [$answerData];
-                    $correctAnswerIds = $question->answers()->where('is_correct', true)->pluck('id')->toArray();
-
-                    // For multiple choice, student gets point only if they select ALL correct answers and NO incorrect ones
-                    sort($selectedAnswerIds);
-                    sort($correctAnswerIds);
-
-                    if ($selectedAnswerIds === $correctAnswerIds) {
-                        $correctAnswers++;
-                    }
-                }
-            }
-        }
+        $correctAnswers = $scoring->countCorrect($attemptQuestions, $submittedAnswers);
 
         // For now, score only includes MCQ questions
         // File upload questions will be graded manually by admin

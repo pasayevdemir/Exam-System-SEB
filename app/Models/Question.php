@@ -11,9 +11,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read Collection<int, Answer> $answers
+ * @property-read QuestionBank $questionBank
+ */
 class Question extends Model
 {
     use HasFactory;
