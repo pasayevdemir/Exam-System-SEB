@@ -84,21 +84,6 @@ class ExamScoringService
     }
 
     /**
-     * How many MCQ questions this attempt contains.
-     *
-     * File-upload questions are graded by hand later, so they are not part of
-     * the automatic score.
-     *
-     * @param  Collection<int, ExamAttemptQuestion>  $attemptQuestions
-     */
-    public function mcqCount(Collection $attemptQuestions): int
-    {
-        return $attemptQuestions
-            ->filter(fn (ExamAttemptQuestion $aq) => $aq->question->question_type !== 'file_upload')
-            ->count();
-    }
-
-    /**
      * What the student actually answered, keyed by question id and holding
      * answer ids: a single id for single-choice, an array for multiple.
      *

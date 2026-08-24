@@ -19,7 +19,6 @@ use App\Http\Requests\Student\StudentLoginRequest;
 use App\Http\Requests\Student\UpdatePasswordRequest;
 use App\Http\Requests\Student\UpdateProfileRequest;
 use App\Http\Requests\Student\VerifyExamPasswordRequest;
-use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamAttemptAnswer;

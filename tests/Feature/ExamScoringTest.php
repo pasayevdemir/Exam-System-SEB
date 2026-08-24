@@ -396,3 +396,25 @@ it('ignores answers for questions outside the attempt', function () {
 
     expect(ExamResult::first()->score)->toBe(1);
 });
+
+// A file-upload question carries no options at all, so an empty selection
+// compared against an empty set of correct options read as an exact match:
+// posting answers[<file question id>] collected a point for a question nobody
+// had graded yet, and pushed the score past the number of MCQ questions.
+// Nothing on the page sends that key, but nothing stopped a client either.
+it('gives no point for an answer posted against a file-upload question', function () {
+    $user = User::factory()->create();
+    $seed = seedAttempt($user, [
+        ['type' => 'single', 'options' => 4, 'correct' => [0]],
+        ['type' => 'file_upload'],
+    ]);
+
+    submitAnswers($user, $seed['exam'], [
+        'answers' => [
+            $seed['questions'][0]['question']->id => 1,  // deliberately wrong
+            $seed['questions'][1]['question']->id => 0,  // the file question
+        ],
+    ]);
+
+    expect(ExamResult::first()->score)->toBe(0);
+});

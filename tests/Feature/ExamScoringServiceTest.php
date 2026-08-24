@@ -243,14 +243,37 @@ describe('counting correct answers', function () {
     });
 });
 
-// File uploads are graded by hand, so they are not part of the automatic score.
-it('counts only MCQ questions towards the automatic score', function () {
-    $user = User::factory()->create();
-    $seed = seedAttempt($user, [
-        ['type' => 'single', 'options' => 2, 'correct' => [0]],
-        ['type' => 'file_upload'],
-        ['type' => 'multiple', 'options' => 2, 'correct' => [0]],
-    ]);
+// File uploads are graded by hand, so they must never reach the automatic
+// score. Both routes in matter: the request body on a live attempt, and the
+// autosaved drafts on an expired one. A file-upload question has no options, so
+// an empty selection matched an empty set of correct options exactly - see the
+// HTTP-level regression in ExamScoringTest for what that used to be worth.
+describe('file-upload questions', function () {
+    it('ignores an answers entry posted for a file-upload question', function () {
+        $user = User::factory()->create();
+        $seed = seedAttempt($user, [
+            ['type' => 'single', 'options' => 2, 'correct' => [0]],
+            ['type' => 'file_upload'],
+        ]);
+        $attemptQuestions = scoring()->questionsFor($seed['attempt']);
+        $fileQuestionId = $seed['questions'][1]['question']->id;
 
-    expect(scoring()->mcqCount(scoring()->questionsFor($seed['attempt'])))->toBe(2);
+        $resolved = scoring()->resolveAnswers($attemptQuestions, [$fileQuestionId => 0], false);
+
+        expect($resolved)->toBeEmpty()
+            ->and(scoring()->countCorrect($attemptQuestions, $resolved))->toBe(0);
+    });
+
+    it('leaves file-upload questions out of an expired attempt drafts', function () {
+        $user = User::factory()->create();
+        $seed = seedAttempt($user, [
+            ['type' => 'single', 'options' => 2, 'correct' => [0]],
+            ['type' => 'file_upload'],
+        ]);
+        $fileQuestionId = $seed['questions'][1]['question']->id;
+
+        $resolved = scoring()->resolveAnswers(scoring()->questionsFor($seed['attempt']), [], true);
+
+        expect($resolved)->not->toHaveKey($fileQuestionId);
+    });
 });
