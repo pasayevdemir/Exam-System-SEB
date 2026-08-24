@@ -14,10 +14,6 @@ class MarkdownRenderer
     {
         if (self::$converter === null) {
             $environment = Environment::createCommonMarkEnvironment();
-            $environment->getConfiguration()->merge([
-                'html_input' => 'escape',
-                'allow_unsafe_links' => false,
-            ]);
             $environment->addExtension(new GithubFlavoredMarkdownExtension());
             self::$converter = new MarkdownConverter($environment);
         }
