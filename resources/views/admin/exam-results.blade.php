@@ -220,11 +220,11 @@
                                         {{ $studentAnswer->answer->is_correct ? 'Correct' : 'Incorrect' }}
                                     </span>
                                 </div>
-                                <p class="mb-2"><strong>Q:</strong> {{ $studentAnswer->question->question_text }}</p>
+                                <p class="mb-2"><strong>Q:</strong> <span class="ps-markdown">@markdown($studentAnswer->question->question_text)</span></p>
                                 <p class="mb-1">
-                                    <strong>Student's Answer:</strong> 
+                                    <strong>Student's Answer:</strong>
                                     <span class="{{ $studentAnswer->answer->is_correct ? 'text-success' : 'text-danger' }}">
-                                        {{ $studentAnswer->answer->answer_text }}
+                                        <span class="ps-markdown">@markdown($studentAnswer->answer->answer_text)</span>
                                     </span>
                                 </p>
                                 @if(!$studentAnswer->answer->is_correct)
@@ -233,8 +233,8 @@
                                     @endphp
                                     @if($correctAnswer)
                                         <p class="mb-0">
-                                            <strong>Correct Answer:</strong> 
-                                            <span class="text-success">{{ $correctAnswer->answer_text }}</span>
+                                            <strong>Correct Answer:</strong>
+                                            <span class="text-success"><span class="ps-markdown">@markdown($correctAnswer->answer_text)</span></span>
                                         </p>
                                     @endif
                                 @endif

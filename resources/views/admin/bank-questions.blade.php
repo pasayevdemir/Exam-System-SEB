@@ -44,6 +44,7 @@
                                   rows="3"
                                   placeholder="Enter your question here..."
                                   required>{{ old('question_text') }}</textarea>
+                        <div class="form-text">Markdown is supported: **bold**, *italic*, lists, `code`, [links](url), tables, blockquotes</div>
                         @error('question_text')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -182,7 +183,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <p class="mb-2">{{ $question->question_text }}</p>
+                            <p class="mb-2"><span class="ps-markdown">@markdown($question->question_text)</span></p>
 
                             <div class="mb-2">
                                 @php
@@ -218,7 +219,7 @@
                                         <div class="d-flex align-items-center mb-1">
                                             <span class="badge bg-light text-dark me-2">{{ chr(65 + $answerIndex) }}</span>
                                             <span class="{{ $answer->is_correct ? 'text-success fw-bold' : '' }}">
-                                                {{ $answer->answer_text }}
+                                                <span class="ps-markdown">@markdown($answer->answer_text)</span>
                                                 @if($answer->is_correct)
                                                     <i class="fas fa-check text-success ms-1"></i>
                                                 @endif

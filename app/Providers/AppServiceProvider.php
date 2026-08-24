@@ -11,7 +11,9 @@
 namespace App\Providers;
 
 use App\Services\AdminCredentials;
+use App\Support\MarkdownRenderer;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,5 +36,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Use custom pagination view
         Paginator::defaultView('pagination.bootstrap-4');
+
+        // Register Blade directive for Markdown rendering
+        Blade::directive('markdown', fn ($expr) => "<?php echo \\App\\Support\\MarkdownRenderer::render($expr); ?>");
     }
 }

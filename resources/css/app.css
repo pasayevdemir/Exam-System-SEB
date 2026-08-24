@@ -881,11 +881,113 @@ h1.h3 {
 
 /* ── Responsive ── */
 
+/* ── Markdown rendered content ── */
+
+.ps-markdown {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--ps-text);
+}
+
+.ps-markdown p {
+    margin-bottom: 0.75rem;
+}
+
+.ps-markdown ul,
+.ps-markdown ol {
+    margin-bottom: 0.75rem;
+    margin-left: 1.5rem;
+}
+
+.ps-markdown li {
+    margin-bottom: 0.25rem;
+}
+
+.ps-markdown blockquote {
+    border-left: 4px solid var(--ps-border);
+    padding-left: 1rem;
+    margin: 0.75rem 0;
+    color: var(--ps-muted);
+    font-style: italic;
+}
+
+.ps-markdown code {
+    background-color: var(--ps-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85em;
+    color: var(--ps-text);
+}
+
+.ps-markdown pre {
+    background-color: var(--ps-bg);
+    border: 1px solid var(--ps-border);
+    border-radius: var(--ps-radius-sm);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    overflow-x: auto;
+}
+
+.ps-markdown pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.8125rem;
+}
+
+.ps-markdown table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.75rem;
+}
+
+.ps-markdown table th,
+.ps-markdown table td {
+    border: 1px solid var(--ps-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.ps-markdown table th {
+    background-color: var(--ps-bg);
+    font-weight: 600;
+}
+
+.ps-markdown strong {
+    font-weight: 600;
+}
+
+.ps-markdown em {
+    font-style: italic;
+}
+
+.ps-markdown del {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.ps-markdown a {
+    color: var(--ps-green);
+    text-decoration: none;
+    transition: var(--ps-transition);
+}
+
+.ps-markdown a:hover {
+    text-decoration: underline;
+    color: var(--ps-green-dark);
+}
+
 @media (max-width: 768px) {
     .questions-container { max-height: 400px; }
 
     .login-card {
         margin: 1rem;
         padding: 1.5rem;
+    }
+
+    .ps-markdown pre {
+        padding: 0.75rem;
+        font-size: 0.75rem;
     }
 }

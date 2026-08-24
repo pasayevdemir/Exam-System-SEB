@@ -96,7 +96,7 @@
                             <div class="card-header">
                                 <h5 class="mb-0">
                                     <span class="badge bg-primary me-2">{{ $index + 1 }}</span>
-                                    {{ $question->question_text }}
+                                    <span class="ps-markdown">@markdown($question->question_text)</span>
                                 </h5>
                                 <small class="text-muted">
                                     <span class="badge ps-bank-tag {{ $questionTone }} me-1">
@@ -179,7 +179,7 @@
                                         @endif
                                         <label class="form-check-label" for="answer_{{ $question->id }}_{{ $answerIndex }}">
                                             <span class="badge bg-light text-dark me-2">{{ chr(65 + $answerIndex) }}</span>
-                                            {{ $answer->answer_text }}
+                                            <span class="ps-markdown">@markdown($answer->answer_text)</span>
                                         </label>
                                     </div>
                                 @endforeach
