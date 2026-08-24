@@ -151,10 +151,12 @@ it('delays the client auto-submit past the server grace period so it is not reje
     // same too-early auto-submit and looped. The real submit must wait out the
     // configured grace period (plus a buffer) so the server already agrees the
     // attempt is over by the time the request lands.
-    expect($html)->toContain('const gracePeriodSeconds = 45;')
-        ->and($html)->toContain('const autoSubmitDelaySeconds = gracePeriodSeconds + AUTO_SUBMIT_BUFFER_SECONDS;')
-        ->and($html)->toContain('id="autoSubmitCountdown">')
-        ->and($html)->toContain('countdownEl.textContent = countdown;');
+    // The wait itself is asserted in tests/js/exam/timer.test.js ("waits for the
+    // grace countdown even when saves finish instantly"). What has to hold on
+    // this side is that the configured grace period actually reaches the client
+    // rather than the timer falling back to a hardcoded default.
+    expect($html)->toContain('"gracePeriodSeconds":45')
+        ->and($html)->toContain('id="autoSubmitCountdown">');
 });
 
 it('gates the auto-submit on every answer finishing its fast, bounded save attempt', function () {
@@ -179,8 +181,11 @@ it('gates the auto-submit on every answer finishing its fast, bounded save attem
     // function's own retries must be tightly bounded (timeout + short,
     // capped backoff) so a dead connection can't stall it past the visible
     // countdown either.
-    expect($html)->toContain('function finalizeAllAnswers()')
-        ->and($html)->toContain('function postAnswerWithFastRetry(payload)')
-        ->and($html)->toContain('maxAttempts: 2, timeoutMs: 2500, delayMs: () => 300')
-        ->and($html)->toContain('Promise.all([gracePeriodElapsed, finalizeAllAnswers()])');
+    // Both halves of that gate now have executing tests: "waits for the saves
+    // even when they outlast the countdown" (timer.test.js) and "uses two
+    // attempts 300ms apart when finalising for auto-submit" (autosave.test.js).
+    // This asserts the page is wired for a timed run at all, which is the
+    // precondition those tests assume.
+    expect($html)->toContain('"timed":true')
+        ->and($html)->toContain('id="auto_submit"');
 });

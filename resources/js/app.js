@@ -10,6 +10,17 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 /**
+ * Page modules, keyed by the data-page attribute the layout renders.
+ *
+ * Static keys with dynamic imports rather than a computed import path: Vite can
+ * only code-split what it can see, so this is what keeps the exam bundle off
+ * every other page while still being one @vite entry.
+ */
+const pageModules = {
+    exam: () => import('./exam/index.js'),
+};
+
+/**
  * Typeset the `$...$` spans the markdown renderer left behind.
  *
  * MathInlineParser claims the formula server-side and emits its source escaped
@@ -32,7 +43,15 @@ function renderMath(root = document) {
 
 window.psRenderMath = renderMath;
 
-document.addEventListener('DOMContentLoaded', () => renderMath());
+document.addEventListener('DOMContentLoaded', () => {
+    renderMath();
+
+    const page = document.body.dataset.page;
+
+    if (page && pageModules[page]) {
+        pageModules[page]().then(module => module.start());
+    }
+});
 
 /**
  * Poll a server-rendered fragment and swap it in when it actually changes.

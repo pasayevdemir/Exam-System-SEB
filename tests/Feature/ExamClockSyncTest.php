@@ -94,8 +94,9 @@ it('drives the on-page countdown from a deadline rather than a per-tick decremen
         ->assertOk()
         ->getContent();
 
-    // Same intent as the ExamAutosaveResilienceTest guard: a PHP test can't run
-    // the JS, but it can stop these pieces being quietly dropped in a later edit.
-    expect($html)->toContain('deadline = Date.now()')
-        ->and($html)->toContain('onServerClock = function');
+    // The tolerance and re-anchoring rules are executed in
+    // tests/js/exam/timer.test.js. The server's job is to hand the client a
+    // reading to anchor on in the first place.
+    expect($html)->toContain('"remainingSeconds":')
+        ->and($html)->toContain('"timed":true');
 });

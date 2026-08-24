@@ -22,13 +22,14 @@ it('renders the connection indicator and retry/queue client logic on the exam pa
         ->assertOk()
         ->getContent();
 
-    // Regression guard for Faza 2.4 - a PHP feature test can't execute the JS
-    // (see the manually-run Node harness that exercised the actual retry/
-    // backoff/race-condition logic against this same rendered output), but it
-    // can catch someone accidentally deleting these pieces in a later edit.
+    // The retry, backoff and queue behaviour this used to assert on by reading
+    // the inline script is now covered for real in tests/js/exam/autosave.test.js,
+    // which executes it. What is left here is the half a PHP test can still
+    // own: the markup those modules bind to, and the queue key the server
+    // chooses, which is per-exam so two open exams cannot share a queue.
     expect($html)->toContain('id="connection-dot"')
         ->and($html)->toContain('id="connection-label"')
-        ->and($html)->toContain('function postAnswerWithRetry')
-        ->and($html)->toContain('function flushAutosaveQueue')
-        ->and($html)->toContain('err.status === 409');
+        ->and($html)->toContain('id="autosave-status"')
+        ->and($html)->toContain('"queueKey":"examAutosaveQueue_'.$seed['exam']->id.'"')
+        ->and($html)->toContain('"autosaveUrl":');
 });

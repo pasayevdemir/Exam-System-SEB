@@ -80,6 +80,12 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
+      # The exam page's autosave queue, retry budgets, clock sync and
+      # auto-submit gate live in resources/js/exam and are only executable here
+      # - php artisan test can render that page but cannot run it.
+      - name: Run JS tests
+        run: npm run test:js
+
       # public/build is gitignored and produced on the server, so a broken Vite
       # config only surfaces at deploy time unless something builds it here.
       - name: Build assets

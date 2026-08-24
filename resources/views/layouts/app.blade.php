@@ -8,7 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')
 </head>
-<body class="bg-light">
+<body class="bg-light" data-page="@yield('page', '')">
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             @if(request()->is('admin*'))
