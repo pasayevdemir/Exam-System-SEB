@@ -40,7 +40,7 @@
                     <div class="col-md-6 mb-3">
                         <div class="border rounded p-3">
                             <h6 class="fw-bold">Question {{ $loop->iteration }}:</h6>
-                            <p class="mb-2">{{ Str::limit($question->question_text, 100) }}</p>
+                            <p class="mb-2">{{ \App\Support\MarkdownRenderer::plainText($question->question_text, 160) }}</p>
                             <div class="small text-muted">
                                 <strong>Allowed:</strong> {{ strtoupper(implode(', ', $question->getAllowedExtensions())) }} |
                                 <strong>Max Size:</strong> {{ $question->getMaxFileSize() }} MB
@@ -102,7 +102,7 @@
                                         @endif
                                     </div>
                                     <div class="card-body p-3">
-                                        <p class="small mb-2">{{ Str::limit($studentAnswer->question->question_text, 80) }}</p>
+                                        <p class="small mb-2">{{ \App\Support\MarkdownRenderer::plainText($studentAnswer->question->question_text, 120) }}</p>
                                         
                                         <!-- File Info -->
                                         <div class="file-info mb-3">

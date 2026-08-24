@@ -220,11 +220,14 @@
                                         {{ $studentAnswer->answer->is_correct ? 'Correct' : 'Incorrect' }}
                                     </span>
                                 </div>
-                                <p class="mb-2"><strong>Q:</strong> <span class="ps-markdown">@markdown($studentAnswer->question->question_text)</span></p>
+                                {{-- A question carrying code samples or a table cannot sit on the
+                                     same line as its "Q:" prefix, so the prefix becomes a label above it. --}}
+                                <div class="ps-md-label">Question</div>
+                                <div class="ps-markdown mb-3">@markdown($studentAnswer->question->question_text)</div>
                                 <p class="mb-1">
                                     <strong>Student's Answer:</strong>
                                     <span class="{{ $studentAnswer->answer->is_correct ? 'text-success' : 'text-danger' }}">
-                                        <span class="ps-markdown">@markdown($studentAnswer->answer->answer_text)</span>
+                                        <span class="ps-markdown">@markdownInline($studentAnswer->answer->answer_text)</span>
                                     </span>
                                 </p>
                                 @if(!$studentAnswer->answer->is_correct)
@@ -234,7 +237,7 @@
                                     @if($correctAnswer)
                                         <p class="mb-0">
                                             <strong>Correct Answer:</strong>
-                                            <span class="text-success"><span class="ps-markdown">@markdown($correctAnswer->answer_text)</span></span>
+                                            <span class="text-success"><span class="ps-markdown">@markdownInline($correctAnswer->answer_text)</span></span>
                                         </p>
                                     @endif
                                 @endif

@@ -37,7 +37,10 @@ class AppServiceProvider extends ServiceProvider
         // Use custom pagination view
         Paginator::defaultView('pagination.bootstrap-4');
 
-        // Register Blade directive for Markdown rendering
+        // Register Blade directives for Markdown rendering. @markdown emits
+        // block HTML; @markdownInline drops the wrapping <p> for the spots the
+        // text lands inside a <label> or a heading, where blocks are invalid.
         Blade::directive('markdown', fn ($expr) => "<?php echo \\App\\Support\\MarkdownRenderer::render($expr); ?>");
+        Blade::directive('markdownInline', fn ($expr) => "<?php echo \\App\\Support\\MarkdownRenderer::renderInline($expr); ?>");
     }
 }

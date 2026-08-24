@@ -6,6 +6,34 @@ import './bootstrap';
 import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
 
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+/**
+ * Typeset the `$...$` spans the markdown renderer left behind.
+ *
+ * MathInlineParser claims the formula server-side and emits its source escaped
+ * inside <span class="ps-math">, so what lands here is exactly what the admin
+ * typed — markdown never got to reinterpret the underscores and backslashes.
+ *
+ * throwOnError stays off on purpose: a malformed formula in one question must
+ * not take down the exam page, so KaTeX renders it in red and the student can
+ * still answer everything else.
+ */
+function renderMath(root = document) {
+    root.querySelectorAll('.ps-math:not(.ps-math-done)').forEach(el => {
+        katex.render(el.textContent, el, {
+            displayMode: el.dataset.display === '1',
+            throwOnError: false,
+        });
+        el.classList.add('ps-math-done');
+    });
+}
+
+window.psRenderMath = renderMath;
+
+document.addEventListener('DOMContentLoaded', () => renderMath());
+
 /**
  * Poll a server-rendered fragment and swap it in when it actually changes.
  *
@@ -37,6 +65,9 @@ window.psLivePoll = function psLivePoll({ url, version, target, intervalMs = 100
     function swap(html, v) {
         target.innerHTML = html;
         currentVersion = v;
+        // Swapped-in markup arrives with untypeset .ps-math spans; the
+        // DOMContentLoaded pass is long gone by then.
+        renderMath(target);
     }
 
     function applyPending() {

@@ -39,6 +39,7 @@
                                   rows="3" 
                                   placeholder="Enter your question here..."
                                   required>{{ old('question_text', $question->question_text) }}</textarea>
+                        <div class="form-text">Markdown is supported: **bold**, *italic*, lists, `code`, [links](url), tables, blockquotes, $formula$</div>
                         @error('question_text')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

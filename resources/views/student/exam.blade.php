@@ -94,10 +94,13 @@
                         @endphp
                         <div class="card mb-4" id="question-card-{{ $question->id }}">
                             <div class="card-header">
-                                <h5 class="mb-0">
+                                {{-- Not an <h5>: the rendered question may be a list or a table,
+                                     which cannot live inside a heading. role/aria-level keep the
+                                     outline the screen reader sees. --}}
+                                <div class="ps-question-title d-flex align-items-start mb-0" role="heading" aria-level="5">
                                     <span class="badge bg-primary me-2">{{ $index + 1 }}</span>
-                                    <span class="ps-markdown">@markdown($question->question_text)</span>
-                                </h5>
+                                    <div class="ps-markdown flex-grow-1">@markdown($question->question_text)</div>
+                                </div>
                                 <small class="text-muted">
                                     <span class="badge ps-bank-tag {{ $questionTone }} me-1">
                                         <i class="fas fa-layer-group me-1"></i>{{ $questionBank->name ?? 'Unassigned' }}
@@ -179,7 +182,7 @@
                                         @endif
                                         <label class="form-check-label" for="answer_{{ $question->id }}_{{ $answerIndex }}">
                                             <span class="badge bg-light text-dark me-2">{{ chr(65 + $answerIndex) }}</span>
-                                            <span class="ps-markdown">@markdown($answer->answer_text)</span>
+                                            <span class="ps-markdown">@markdownInline($answer->answer_text)</span>
                                         </label>
                                     </div>
                                 @endforeach

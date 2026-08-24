@@ -883,40 +883,95 @@ h1.h3 {
 
 /* ── Markdown rendered content ── */
 
+/* Everything here sizes in em, not rem: the same rendered HTML appears at three
+   different base sizes (question title, answer option, admin review list), and
+   a heading has to stay proportional to whichever one it landed in. */
 .ps-markdown {
-    font-size: 0.875rem;
-    line-height: 1.6;
+    font-size: 0.9375rem;
+    line-height: 1.65;
     color: var(--ps-text);
 }
 
 .ps-markdown p {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.75em;
+}
+
+/* Author headings are subheadings *inside* a question, so they cap well below
+   the browser default (h1 is 2em = 28px against our 14px body, which is what
+   made a "## Python:" label shout louder than the question itself). */
+.ps-markdown h1,
+.ps-markdown h2,
+.ps-markdown h3,
+.ps-markdown h4,
+.ps-markdown h5,
+.ps-markdown h6 {
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 1.25em 0 0.5em;
+    color: var(--ps-text);
+}
+
+.ps-markdown h1 { font-size: 1.2em; }
+.ps-markdown h2 { font-size: 1.12em; }
+.ps-markdown h3 { font-size: 1.05em; }
+
+.ps-markdown h4,
+.ps-markdown h5,
+.ps-markdown h6 {
+    font-size: 1em;
+}
+
+/* No leading gap when the text opens on a heading. */
+.ps-markdown > :first-child {
+    margin-top: 0;
 }
 
 .ps-markdown ul,
 .ps-markdown ol {
-    margin-bottom: 0.75rem;
-    margin-left: 1.5rem;
+    margin: 0 0 0.75em;
+    padding-left: 1.5em;
 }
 
 .ps-markdown li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.25em;
+}
+
+.ps-markdown li > ul,
+.ps-markdown li > ol {
+    margin-top: 0.25em;
+    margin-bottom: 0;
 }
 
 .ps-markdown blockquote {
-    border-left: 4px solid var(--ps-border);
-    padding-left: 1rem;
-    margin: 0.75rem 0;
+    border-left: 3px solid var(--ps-border);
+    padding-left: 0.875em;
+    margin: 0.75em 0;
     color: var(--ps-muted);
-    font-style: italic;
+}
+
+.ps-markdown hr {
+    border: 0;
+    border-top: 1px solid var(--ps-border);
+    margin: 1.25em 0;
+    opacity: 1;
+}
+
+/* A system monospace stack rather than Courier New, which renders thin and
+   wide and costs a code sample two extra wrapped lines. */
+.ps-markdown code,
+.ps-markdown pre {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    /* The question title is set in 500; code must not inherit that. */
+    font-weight: 400;
 }
 
 .ps-markdown code {
     background-color: var(--ps-bg);
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-family: "Courier New", monospace;
-    font-size: 0.85em;
+    border: 1px solid var(--ps-border);
+    padding: 0.12em 0.35em;
+    border-radius: 4px;
+    font-size: 0.875em;
     color: var(--ps-text);
 }
 
@@ -924,28 +979,37 @@ h1.h3 {
     background-color: var(--ps-bg);
     border: 1px solid var(--ps-border);
     border-radius: var(--ps-radius-sm);
-    padding: 1rem;
-    margin-bottom: 0.75rem;
+    padding: 0.75em 0.875em;
+    margin: 0.5em 0 0.75em;
     overflow-x: auto;
+    line-height: 1.5;
+    tab-size: 4;
 }
 
 .ps-markdown pre code {
     background-color: transparent;
+    border: 0;
     padding: 0;
     border-radius: 0;
     font-size: 0.8125rem;
 }
 
+/* block + max-content + overflow lets a wide table scroll on its own instead of
+   pushing the exam card sideways. */
 .ps-markdown table {
-    width: 100%;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
     border-collapse: collapse;
-    margin-bottom: 0.75rem;
+    margin: 0 0 0.75em;
+    font-size: 0.95em;
 }
 
 .ps-markdown table th,
 .ps-markdown table td {
     border: 1px solid var(--ps-border);
-    padding: 0.5rem 0.75rem;
+    padding: 0.45em 0.7em;
     text-align: left;
 }
 
@@ -976,6 +1040,61 @@ h1.h3 {
 .ps-markdown a:hover {
     text-decoration: underline;
     color: var(--ps-green-dark);
+}
+
+/* The last block's bottom margin is dead space everywhere this HTML is nested
+   inside a heading, a label or a table cell — which is every use of it. */
+.ps-markdown > :last-child {
+    margin-bottom: 0;
+}
+
+.ps-markdown img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ps-radius-sm);
+}
+
+/* Restores the h5 weight the question card had before the title became a div
+   (a heading cannot legally contain the lists and tables markdown emits). */
+.ps-question-title .ps-markdown {
+    font-size: 1.0625rem;
+    font-weight: 500;
+}
+
+/* A question long enough to carry code samples reads as body copy, not as a
+   card title — so only its opening paragraph keeps the title weight. */
+.ps-question-title .ps-markdown pre,
+.ps-question-title .ps-markdown table,
+.ps-question-title .ps-markdown blockquote {
+    font-weight: 400;
+}
+
+/* Label above a rendered block, for the admin review screens where the
+   question no longer fits on the same line as its "Q:" prefix. */
+.ps-md-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ps-muted);
+    margin-bottom: 0.25rem;
+}
+
+
+/* ── Math (KaTeX) ── */
+
+/* Deliberately left visible before KaTeX runs: if the JS bundle fails, the
+   student must still see `E=mc^2` as text rather than an empty gap in the
+   question. app.js adds .ps-math-done once it has typeset the span. */
+.ps-math:not(.ps-math-done) {
+    font-family: var(--bs-font-monospace, monospace);
+}
+
+.ps-math[data-display="1"] {
+    display: block;
+    margin: 0.75rem 0;
+    text-align: center;
+    overflow-x: auto;
 }
 
 @media (max-width: 768px) {
