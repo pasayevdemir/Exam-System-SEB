@@ -38,6 +38,19 @@ class User extends Authenticatable
     ];
 
     /**
+     * The FIN code is the national ID that ties a student to every score report
+     * they appear on. Once they have exam history, letting them rewrite it would
+     * break the link between an already-issued result and a real person - so it
+     * freezes at the first attempt. Before that it stays editable, because a
+     * typo at registration is common and shouldn't need an admin.
+     */
+    public function finCodeIsLocked(): bool
+    {
+        return ExamAttempt::where('user_id', $this->id)->exists()
+            || ExamResult::where('user_id', $this->id)->exists();
+    }
+
+    /**
      * Full name, derived from first_name + last_name so it never drifts out of sync.
      */
     protected function name(): Attribute

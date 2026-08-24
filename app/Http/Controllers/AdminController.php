@@ -11,6 +11,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Admin\AdminLoginRequest;
+use App\Http\Requests\Admin\AttachBankRequest;
+use App\Http\Requests\Admin\GradeFileSubmissionRequest;
+use App\Http\Requests\Admin\ImportQuestionsRequest;
+use App\Http\Requests\Admin\SetStudentPasswordRequest;
+use App\Http\Requests\Admin\StoreExamRequest;
+use App\Http\Requests\Admin\StoreQuestionBankRequest;
+use App\Http\Requests\Admin\UpdateAdminCredentialsRequest;
+use App\Http\Requests\Admin\UpdateBankQuotaRequest;
+use App\Http\Requests\Admin\UpdateExamRequest;
+use App\Http\Requests\Admin\UpdateQuestionBankRequest;
+use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
@@ -48,12 +60,8 @@ class AdminController extends Controller
         return view('admin.login');
     }
 
-    public function authenticate(Request $request)
+    public function authenticate(AdminLoginRequest $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
 
         if (! $this->credentials->verifyLogin($request->username, $request->password)) {
             return back()->with('error', 'Invalid username or password.');
@@ -96,16 +104,9 @@ class AdminController extends Controller
         ]);
     }
 
-    public function updateCredentials(Request $request)
+    public function updateCredentials(UpdateAdminCredentialsRequest $request)
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'string'],
-            'username' => ['required', 'string', 'max:255'],
-            // Nullable so the username can be corrected on its own. Longer than
-            // the students' min:8 because this one credential authorises every
-            // destructive action in the system.
-            'password' => ['nullable', 'string', 'min:12', 'confirmed'],
-        ]);
+        $validated = $request->validated();
 
         if (! $this->credentials->passwordMatches($validated['current_password'])) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.'])
@@ -149,15 +150,8 @@ class AdminController extends Controller
         return view('admin.create-exam');
     }
 
-    public function storeExam(Request $request)
+    public function storeExam(StoreExamRequest $request)
     {
-        $request->validate([
-            'exam_id' => 'required|string|unique:exams,exam_id',
-            'exam_name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'time_limit_minutes' => 'nullable|integer|min:1|max:600',
-            'entry_password' => 'nullable|string|max:255',
-        ]);
 
         $exam = Exam::create([
             'exam_id' => $request->exam_id,
@@ -181,18 +175,9 @@ class AdminController extends Controller
         return view('admin.edit-exam', compact('exam'));
     }
 
-    public function updateExam(Request $request, $examId)
+    public function updateExam(UpdateExamRequest $request, $examId)
     {
         $exam = Exam::findOrFail($examId);
-
-        $request->validate([
-            'exam_id' => 'required|string|unique:exams,exam_id,'.$exam->id,
-            'exam_name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'is_active' => 'boolean',
-            'time_limit_minutes' => 'nullable|integer|min:1|max:600',
-            'entry_password' => 'nullable|string|max:255',
-        ]);
 
         $exam->update([
             'exam_id' => $request->exam_id,
@@ -221,12 +206,8 @@ class AdminController extends Controller
         return view('admin.create-bank');
     }
 
-    public function storeBank(Request $request)
+    public function storeBank(StoreQuestionBankRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-        ]);
 
         $bank = QuestionBank::create($request->only(['name', 'description']));
 
@@ -241,14 +222,9 @@ class AdminController extends Controller
         return view('admin.edit-bank', compact('bank'));
     }
 
-    public function updateBank(Request $request, $bankId)
+    public function updateBank(UpdateQuestionBankRequest $request, $bankId)
     {
         $bank = QuestionBank::findOrFail($bankId);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-        ]);
 
         $bank->update($request->only(['name', 'description']));
 
@@ -464,18 +440,9 @@ class AdminController extends Controller
         return view('admin.import-questions', compact('bank'));
     }
 
-    public function storeImportedQuestions(Request $request, $bankId, QuestionImportService $importer)
+    public function storeImportedQuestions(ImportQuestionsRequest $request, $bankId, QuestionImportService $importer)
     {
         $bank = QuestionBank::findOrFail($bankId);
-
-        $request->validate([
-            // Extension-only on purpose. MIME sniffing for CSV/JSON is unreliable
-            // in practice (finfo says text/plain for CSV, Excel uploads arrive as
-            // application/vnd.ms-excel, some browsers send octet-stream for .json)
-            // and would reject legitimate files while buying no safety here — the
-            // parser reads text and never evaluates it.
-            'file' => ['required', 'file', 'max:2048', 'extensions:csv,txt,json'],
-        ]);
 
         $file = $request->file('file');
         $format = strtolower($file->getClientOriginalExtension()) === 'json' ? 'json' : 'csv';
@@ -695,12 +662,8 @@ class AdminController extends Controller
         return $kept;
     }
 
-    public function gradeFileSubmission(Request $request, $studentAnswerId)
+    public function gradeFileSubmission(GradeFileSubmissionRequest $request, $studentAnswerId)
     {
-        $request->validate([
-            'manual_score' => 'required|numeric|min:0|max:100',
-            'admin_feedback' => 'nullable|string|max:1000',
-        ]);
 
         $studentAnswer = StudentAnswer::with(['question', 'examResult.exam'])->findOrFail($studentAnswerId);
 
@@ -899,16 +862,9 @@ class AdminController extends Controller
         return view('admin.exam-banks', compact('exam', 'availableBanks', 'bankCounts'));
     }
 
-    public function attachBank(Request $request, $examId)
+    public function attachBank(AttachBankRequest $request, $examId)
     {
         $exam = Exam::findOrFail($examId);
-
-        $request->validate([
-            'question_bank_id' => 'required|exists:question_banks,id',
-            'quota_easy' => 'required|integer|min:0',
-            'quota_medium' => 'required|integer|min:0',
-            'quota_hard' => 'required|integer|min:0',
-        ]);
 
         if (($request->quota_easy + $request->quota_medium + $request->quota_hard) === 0) {
             return back()->with('error', 'At least one difficulty quota must be greater than zero.')->withInput();
@@ -927,15 +883,9 @@ class AdminController extends Controller
             ->with($this->quotaWarningOrSuccess($eqb, 'Bank attached successfully!'));
     }
 
-    public function updateBankQuota(Request $request, $examId, $bankAssignmentId)
+    public function updateBankQuota(UpdateBankQuotaRequest $request, $examId, $bankAssignmentId)
     {
         $eqb = ExamQuestionBank::where('exam_id', $examId)->findOrFail($bankAssignmentId);
-
-        $request->validate([
-            'quota_easy' => 'required|integer|min:0',
-            'quota_medium' => 'required|integer|min:0',
-            'quota_hard' => 'required|integer|min:0',
-        ]);
 
         if (($request->quota_easy + $request->quota_medium + $request->quota_hard) === 0) {
             return back()->with('error', 'At least one difficulty quota must be greater than zero.')->withInput();
@@ -1363,17 +1313,11 @@ class AdminController extends Controller
         return view('admin.edit-student', compact('student'));
     }
 
-    public function updateStudent(Request $request, $userId)
+    public function updateStudent(UpdateStudentRequest $request, $userId)
     {
         $student = User::findOrFail($userId);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->id)],
-            'fin_code' => ['required', 'string', 'max:20', Rule::unique('users', 'fin_code')->ignore($student->id)],
-        ]);
+        $validated = $request->validated();
 
         $student->update($validated);
 
@@ -1434,7 +1378,7 @@ class AdminController extends Controller
      * request the student had open - the request has been answered, so leaving
      * it pending would just make the admin handle it twice.
      */
-    public function setStudentPassword(Request $request, $userId)
+    public function setStudentPassword(SetStudentPasswordRequest $request, $userId)
     {
         $student = User::findOrFail($userId);
 
@@ -1445,11 +1389,7 @@ class AdminController extends Controller
             return back()->with('success', "Password for {$student->name} is now their FIN code ({$student->fin_code}).");
         }
 
-        $validated = $request->validate([
-            'password' => 'required|string|min:8',
-        ]);
-
-        $student->update(['password' => $validated['password']]);
+        $student->update(['password' => $request->validated()['password']]);
         PasswordResetRequest::closePendingFor($student);
 
         // The admin chose this password, so there is nothing to hand back - and

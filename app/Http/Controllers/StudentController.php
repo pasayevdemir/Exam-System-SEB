@@ -13,6 +13,12 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ConcurrentExamAttemptException;
 use App\Exceptions\ExamClosedException;
+use App\Http\Requests\Student\RegisterStudentRequest;
+use App\Http\Requests\Student\RequestPasswordResetRequest;
+use App\Http\Requests\Student\StudentLoginRequest;
+use App\Http\Requests\Student\UpdatePasswordRequest;
+use App\Http\Requests\Student\UpdateProfileRequest;
+use App\Http\Requests\Student\VerifyExamPasswordRequest;
 use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
@@ -37,16 +43,9 @@ class StudentController extends Controller
         return view('student.register');
     }
 
-    public function store(Request $request)
+    public function store(RegisterStudentRequest $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'fin_code' => 'required|string|max:20|unique:users,fin_code',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
         // No Hash::make here — the User model casts 'password' => 'hashed', which
         // is the same mechanism every other password write in this app relies on.
@@ -94,12 +93,9 @@ class StudentController extends Controller
         return view('student.login');
     }
 
-    public function authenticate(Request $request)
+    public function authenticate(StudentLoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        $credentials = $request->validated();
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
@@ -119,11 +115,9 @@ class StudentController extends Controller
      * Raise a password reset request for an admin to approve. Students never
      * reset their own password here - approval hands them a generated one.
      */
-    public function storePasswordRequest(Request $request)
+    public function storePasswordRequest(RequestPasswordResetRequest $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|string|email|max:255',
-        ]);
+        $validated = $request->validated();
 
         $user = User::where('email', $validated['email'])->first();
 
@@ -338,6 +332,11 @@ class StudentController extends Controller
             return response()->json(['success' => false, 'message' => 'Time limit reached.'], 409);
         }
 
+        // Deliberately not a FormRequest: those validate before the method body
+        // runs, and the two 409 guards above have to answer first. The exam page
+        // treats 409 as final and stops, but retries anything else three times
+        // and then queues it forever - so turning an expired attempt into a 422
+        // would leave the client hammering a closed attempt.
         $validated = $request->validate([
             'question_id' => 'required|integer',
             'answer_indexes' => 'nullable|array',
@@ -402,6 +401,11 @@ class StudentController extends Controller
             return response()->json(['success' => false, 'message' => 'No active attempt.'], 409);
         }
 
+        // Deliberately not a FormRequest: those validate before the method body
+        // runs, and the two 409 guards above have to answer first. The exam page
+        // treats 409 as final and stops, but retries anything else three times
+        // and then queues it forever - so turning an expired attempt into a 422
+        // would leave the client hammering a closed attempt.
         $validated = $request->validate([
             'type' => ['required', 'string', Rule::in(ExamAttemptEvent::TYPES)],
         ]);
@@ -414,13 +418,9 @@ class StudentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function verifyExamPassword(Request $request, $examId)
+    public function verifyExamPassword(VerifyExamPasswordRequest $request, $examId)
     {
         $exam = Exam::findOrFail($examId);
-
-        $request->validate([
-            'entry_password' => 'required|string',
-        ]);
 
         if (! $exam->requiresEntryPassword() || $request->entry_password !== $exam->entry_password) {
             return back()->withErrors(['entry_password' => 'Incorrect password.']);
@@ -743,48 +743,16 @@ class StudentController extends Controller
 
         return view('student.profile', [
             'user' => $user,
-            'finLocked' => $this->finCodeIsLocked($user),
+            'finLocked' => $user->finCodeIsLocked(),
         ]);
     }
 
-    /**
-     * The FIN code is the national ID that ties a student to every score report
-     * they appear on. Once they have exam history, letting them rewrite it would
-     * break the link between an already-issued result and a real person — so it
-     * freezes at the first attempt. Before that it stays editable, because a
-     * typo at registration is common and shouldn't need an admin.
-     */
-    private function finCodeIsLocked(User $user): bool
+    public function updateProfile(UpdateProfileRequest $request)
     {
-        return ExamAttempt::where('user_id', $user->id)->exists()
-            || ExamResult::where('user_id', $user->id)->exists();
-    }
-
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-        $finLocked = $this->finCodeIsLocked($user);
-
-        $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-        ];
-
-        if (! $finLocked) {
-            $rules['fin_code'] = ['required', 'string', 'max:20', Rule::unique('users', 'fin_code')->ignore($user->id)];
-        }
-
-        $validated = $request->validate($rules);
-
-        // The form renders the locked field as disabled, but a hand-crafted POST
-        // would still carry it — dropping it here is what actually enforces this.
-        if ($finLocked) {
-            unset($validated['fin_code']);
-        }
-
-        $user->update($validated);
+        // fin_code is absent from validated() whenever it is locked, because
+        // UpdateProfileRequest leaves it out of the rules entirely - so a
+        // hand-crafted POST carrying it writes nothing.
+        Auth::user()->update($request->validated());
 
         return redirect()->route('student.profile')->with('success', 'Your details have been updated.');
     }
@@ -796,12 +764,9 @@ class StudentController extends Controller
      * stays admin-approved: there the student cannot prove who they are, whereas
      * here they are already authenticated and re-type the current password.
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(UpdatePasswordRequest $request)
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'string', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
-        ]);
+        $validated = $request->validated();
 
         $user = Auth::user();
         $user->update(['password' => $validated['password']]);
