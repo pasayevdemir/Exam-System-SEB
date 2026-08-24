@@ -1,0 +1,88 @@
+# Runs the test suite, the formatter and the static analyser on every push and
+# pull request.
+#
+# Deliberately separate from deploy.yml, and deliberately *does* carry a
+# `pull_request` trigger, which that file forbids for itself. The rule there
+# exists because the deploy job holds an SSH key: a fork's code must never run
+# with access to it. This job takes no secrets, touches no server and runs on a
+# GitHub-hosted runner, so a fork running it can only fail its own check.
+#
+# No database service: phpunit.xml points the suite at SQLite :memory:, so the
+# runner needs nothing but the pdo_sqlite extension.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A superseded push is worth cancelling — unlike a deploy, a half-finished test
+# run leaves nothing behind.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, bcmath, zip, gd, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # No `pint --test` gate yet: the existing tree predates pint.json and
+      # reports on ~100 files, most of it line endings, so turning it on as a
+      # blocking check would mean a repo-wide reformat first — a call for the
+      # maintainer, not for this workflow. pint.json is committed so
+      # `./vendor/bin/pint --dirty` works locally in the meantime.
+      - name: Run static analysis
+        run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+      - name: Run tests
+        run: php artisan test
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      # public/build is gitignored and produced on the server, so a broken Vite
+      # config only surfaces at deploy time unless something builds it here.
+      - name: Build assets
+        run: npm run build

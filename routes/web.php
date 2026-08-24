@@ -117,7 +117,12 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::middleware('seb')->group(function () {
             Route::get('/keep-alive', [StudentController::class, 'keepAlive'])->name('keep-alive');
             Route::get('/exam/{exam}', [StudentController::class, 'exam'])->name('exam');
-            Route::post('/exam/{exam}/verify-password', [StudentController::class, 'verifyExamPassword'])->name('verify-exam-password');
+            // Throttled like the two login endpoints: an exam entry password is
+            // a short shared secret handed out in a room, so an unlimited POST
+            // here is a small enough search space to be worth guessing.
+            Route::post('/exam/{exam}/verify-password', [StudentController::class, 'verifyExamPassword'])
+                ->middleware('throttle:10,1')
+                ->name('verify-exam-password');
             Route::post('/exam/{exam}/autosave', [StudentController::class, 'autosaveAnswer'])->name('autosave-answer');
             Route::post('/exam/{exam}/event', [StudentController::class, 'logEvent'])->name('log-event')->middleware('throttle:60,1');
             Route::post('/exam/{exam}/submit', [StudentController::class, 'submitExam'])->name('submit-exam');

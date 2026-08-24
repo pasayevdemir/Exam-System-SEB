@@ -1,0 +1,583 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Console/Commands/SebVerify.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$examQuestionBanks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$quota_total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamQuestionBank\:\:\$questionBank\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$examQuestionBanks\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$quota_total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PasswordResetRequest\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\PasswordResetRequest\>\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\QuestionBank\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\QuestionBank\>\:\:\$questions_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$examResult\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class Log\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''examResult'' is not found in App\\Models\\StudentAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''questionBank'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\PasswordResetRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>fin_code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamAttempt\:\:\$exam\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$exam\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Anonymous function has an unused use \$examId\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class Log\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\ExamAttempt\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Relation ''exam'' is not found in App\\Models\\ExamAttempt model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Relation ''exam'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamAttemptQuestion\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ExamAttemptQuestion.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ExamResult.php
+
+		-
+			message: '#^Offset ''easy''\|''hard''\|''medium'' on array\{easy\: 1\.0, medium\: 1\.5, hard\: 2\.0\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/Question.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AdminCredentials.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: app/Services/QuestionImportService.php
+
+		-
+			message: '#^Method App\\Services\\QuestionImportService\:\:readCsv\(\) should return array\<int, array\{label\: int\|string, question\: mixed, difficulty\: mixed, type\: mixed, options\: array, correct\: mixed, correctIsList\: bool\}\> but returns list\<array\{label\: int\<2, max\>, question\: string, difficulty\: string, type\: string, options\: non\-empty\-list\<string\>, correct\: list\<non\-empty\-string\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/QuestionImportService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between non\-empty\-list\<string\|null\> and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/QuestionImportService.php
+
+		-
+			message: '#^Method App\\Support\\Markdown\\MathNodeRenderer\:\:render\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Support/Markdown/MathNodeRenderer.php
+
+		-
+			message: '#^Method App\\Support\\Markdown\\MathNodeRenderer\:\:render\(\) never returns string so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Support/Markdown/MathNodeRenderer.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/AdminCredentialsTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/AdminCredentialsTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 9
+			path: tests/Feature/AdminCredentialsTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamAutosaveResilienceTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamBanksPageTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/Feature/ExamClockSyncTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamCompletionRedirectTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/ExamExpiryTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/ExamExpiryTest.php
+
+		-
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<mixed\>\:\:\$not\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/ExamLiveUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 13
+			path: tests/Feature/ExamLiveUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:flushSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamLiveUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamLiveUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamLiveUpdateTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: tests/Feature/ExamQuestionMapTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/Feature/ExamScoringTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: tests/Feature/ExamScoringTest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: tests/Feature/ExamScoringTest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>selected_answer_ids" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: tests/Feature/ExamScoringTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamTelemetryTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/ExamTelemetryTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExampleTest.php
+
+		-
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<string\|null\>\:\:\$not\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/MarkdownRenderingTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/MarkdownRenderingTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/PasswordGatedDeletionTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/QuestionCreationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/QuestionCreationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/QuestionCreationTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 3
+			path: tests/Feature/QuestionEditingTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/QuestionEditingTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Question\:\:\$answers\.$#'
+			identifier: property.notFound
+			count: 5
+			path: tests/Feature/QuestionImportTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/QuestionImportTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: tests/Feature/QuestionImportTest.php
+
+		-
+			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: tests/Feature/QuestionImportTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/ResultVisibilityTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ResultVisibilityTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/SebMiddlewareTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:artisan\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/SebVerifyCommandTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 14
+			path: tests/Feature/SingleActiveExamTest.php
+
+		-
+			message: '#^Access to an undefined property Pest\\Expectation\<App\\Models\\User\|null\>\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Feature/StudentManagementTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/StudentManagementTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: tests/Feature/StudentManagementTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/StudentManagementTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
+			identifier: method.notFound
+			count: 14
+			path: tests/Feature/StudentProfileTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/StudentProfileTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:put\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/StudentProfileTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:assertAuthenticatedAs\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/StudentRegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:assertGuest\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/StudentRegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: tests/Feature/StudentRegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:post\(\)\.$#'
+			identifier: method.notFound
+			count: 8
+			path: tests/Feature/StudentRegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Feature/StudentRegistrationTest.php

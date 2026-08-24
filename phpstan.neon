@@ -1,0 +1,20 @@
+# Static analysis gate.
+#
+# Level 5 with a baseline rather than a lower level with none: the baseline
+# freezes what the existing ~4,800 lines already report, so nothing has to be
+# fixed up front, while every new or edited line is held to level 5 from day
+# one. Chipping away at phpstan-baseline.neon is then a background task that
+# can happen a file at a time.
+includes:
+    - phpstan-baseline.neon
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - tests

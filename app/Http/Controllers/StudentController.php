@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Services\ExamGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -568,109 +569,149 @@ class StudentController extends Controller
         // File upload questions will be graded manually by admin
         $score = $correctAnswers;
 
-        // Create exam result
-        $examResult = ExamResult::create([
-            'exam_id' => $exam->id,
-            'exam_attempt_id' => $attempt->id,
-            'user_id' => Auth::id(),
-            'total_questions' => $attemptQuestions->count(),
-            'correct_answers' => $correctAnswers,
-            'score' => $score,
-            'submitted_at' => now()
-        ]);
-
-        // Store MCQ answers
-        if ($submittedAnswers->isNotEmpty()) {
-            foreach ($submittedAnswers as $questionId => $answerData) {
-                $question = $questionsById->get($questionId);
-
-                if ($question->question_type === 'single') {
-                    // Single choice: answerData is a single answer ID. On an
-                    // auto-submit it can be absent - storing a null answer_id
-                    // would blow up the results page, which dereferences it.
-                    if ($answerData !== null) {
-                        StudentAnswer::create([
-                            'exam_result_id' => $examResult->id,
-                            'question_id' => $questionId,
-                            'answer_id' => $answerData
-                        ]);
-                    }
-                } else {
-                    // Multiple choice: answerData is an array of answer IDs
-                    $selectedAnswerIds = is_array($answerData) ? $answerData : [$answerData];
-
-                    // Create a student answer record for each selected option
-                    foreach ($selectedAnswerIds as $answerId) {
-                        StudentAnswer::create([
-                            'exam_result_id' => $examResult->id,
-                            'question_id' => $questionId,
-                            'answer_id' => $answerId
-                        ]);
-                    }
-                }
-            }
-        }
-
-        // Store file uploads - never accepted once the deadline has passed, since
-        // there's no autosaved snapshot of a file the way there is for MCQ answers.
-        $uploadedQuestionIds = [];
+        // Files land on disk before the transaction opens. A disk write cannot be
+        // rolled back, so doing it inside would leave the uploaded file behind
+        // anyway; keeping it out means the transaction holds nothing but row
+        // writes and stays short. Metadata is read off the upload before the
+        // move, while the temp file is still where UploadedFile expects it.
+        //
+        // Never accepted once the deadline has passed, since there's no autosaved
+        // snapshot of a file the way there is for MCQ answers.
+        $storedFiles = [];
 
         if (!$isExpired && $request->has('file_uploads')) {
             foreach ($request->file('file_uploads') as $questionId => $uploadedFile) {
                 if ($uploadedFile && $uploadedFile->isValid()) {
-                    // Generate unique filename
                     $extension = $uploadedFile->getClientOriginalExtension();
                     $filename = 'exam_' . $exam->id . '_student_' . Auth::id() . '_question_' . $questionId . '_' . time() . '.' . $extension;
-                    
+
+                    $originalName = $uploadedFile->getClientOriginalName();
+                    $fileSize = $uploadedFile->getSize();
+                    $mimeType = $uploadedFile->getMimeType();
+
                     // Private disk (storage/app/private) — student submissions must not
                     // be reachable via a guessable public URL without authentication.
-                    $filePath = $uploadedFile->storeAs('exam_submissions', $filename, 'local');
-                    
-                    // Create student answer record for file upload
-                    StudentAnswer::create([
-                        'exam_result_id' => $examResult->id,
-                        'question_id' => $questionId,
-                        'answer_id' => null, // No answer_id for file uploads
-                        'file_path' => $filePath,
-                        'original_filename' => $uploadedFile->getClientOriginalName(),
-                        'file_size' => $uploadedFile->getSize(),
-                        'file_mime_type' => $uploadedFile->getMimeType(),
-                        'is_graded' => false
-                    ]);
-
-                    $uploadedQuestionIds[] = (int) $questionId;
+                    $storedFiles[(int) $questionId] = [
+                        'file_path' => $uploadedFile->storeAs('exam_submissions', $filename, 'local'),
+                        'original_filename' => $originalName,
+                        'file_size' => $fileSize,
+                        'file_mime_type' => $mimeType,
+                    ];
                 }
             }
         }
 
-        // A file-upload question with no file stored - skipped outright, or never
-        // reached before time ran out - otherwise has no StudentAnswer row at
-        // all, and admin grading has nothing to show or grade for it.
-        foreach ($questionsById as $question) {
-            if ($question->question_type !== 'file_upload'
-                || in_array($question->id, $uploadedQuestionIds, true)) {
-                continue;
+        // Everything that writes a row goes in one transaction, taking the
+        // attempt row first. Same reasoning as ExamGenerationService::generate()
+        // on the start path: the completed_at check above runs outside any
+        // transaction, so a double-click — or the autosave retry logic in
+        // exam.blade.php firing twice on a flaky connection — lets both requests
+        // read "not completed" and both write a result. Re-reading completed_at
+        // under the lock makes the second request wait and then see the first
+        // one's work. Without the transaction a request dying midway would also
+        // leave a result row behind on an attempt still marked open.
+        //
+        // Returns null when the attempt was finalized by whoever got here first.
+        $examResult = DB::transaction(function () use (
+            $attempt, $exam, $examId, $attemptQuestions, $questionsById,
+            $submittedAnswers, $correctAnswers, $score, $isExpired, $storedFiles
+        ) {
+            $locked = ExamAttempt::whereKey($attempt->id)->lockForUpdate()->first();
+
+            if ($locked === null || $locked->completed_at !== null) {
+                return null;
             }
 
-            StudentAnswer::create([
-                'exam_result_id' => $examResult->id,
-                'question_id' => $question->id,
-                'answer_id' => null,
-                'file_path' => null,
-                'admin_feedback' => $isExpired
-                    ? 'File not submitted before time limit.'
-                    : 'File not submitted.',
-                'is_graded' => false,
+            $examResult = ExamResult::create([
+                'exam_id' => $exam->id,
+                'exam_attempt_id' => $attempt->id,
+                'user_id' => Auth::id(),
+                'total_questions' => $attemptQuestions->count(),
+                'correct_answers' => $correctAnswers,
+                'score' => $score,
+                'submitted_at' => now()
             ]);
-        }
 
-        $attempt->update(['completed_at' => now()]);
+            // Store MCQ answers
+            if ($submittedAnswers->isNotEmpty()) {
+                foreach ($submittedAnswers as $questionId => $answerData) {
+                    $question = $questionsById->get($questionId);
 
-        // Drafts are no longer needed once the attempt is finalized.
-        ExamAttemptAnswer::where('exam_attempt_id', $attempt->id)->delete();
+                    if ($question->question_type === 'single') {
+                        // Single choice: answerData is a single answer ID. On an
+                        // auto-submit it can be absent - storing a null answer_id
+                        // would blow up the results page, which dereferences it.
+                        if ($answerData !== null) {
+                            StudentAnswer::create([
+                                'exam_result_id' => $examResult->id,
+                                'question_id' => $questionId,
+                                'answer_id' => $answerData
+                            ]);
+                        }
+                    } else {
+                        // Multiple choice: answerData is an array of answer IDs
+                        $selectedAnswerIds = is_array($answerData) ? $answerData : [$answerData];
+
+                        // Create a student answer record for each selected option
+                        foreach ($selectedAnswerIds as $answerId) {
+                            StudentAnswer::create([
+                                'exam_result_id' => $examResult->id,
+                                'question_id' => $questionId,
+                                'answer_id' => $answerId
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            foreach ($storedFiles as $questionId => $file) {
+                StudentAnswer::create([
+                    'exam_result_id' => $examResult->id,
+                    'question_id' => $questionId,
+                    'answer_id' => null, // No answer_id for file uploads
+                    'file_path' => $file['file_path'],
+                    'original_filename' => $file['original_filename'],
+                    'file_size' => $file['file_size'],
+                    'file_mime_type' => $file['file_mime_type'],
+                    'is_graded' => false
+                ]);
+            }
+
+            // A file-upload question with no file stored - skipped outright, or never
+            // reached before time ran out - otherwise has no StudentAnswer row at
+            // all, and admin grading has nothing to show or grade for it.
+            foreach ($questionsById as $question) {
+                if ($question->question_type !== 'file_upload'
+                    || array_key_exists($question->id, $storedFiles)) {
+                    continue;
+                }
+
+                StudentAnswer::create([
+                    'exam_result_id' => $examResult->id,
+                    'question_id' => $question->id,
+                    'answer_id' => null,
+                    'file_path' => null,
+                    'admin_feedback' => $isExpired
+                        ? 'File not submitted before time limit.'
+                        : 'File not submitted.',
+                    'is_graded' => false,
+                ]);
+            }
+
+            $locked->update(['completed_at' => now()]);
+
+            // Drafts are no longer needed once the attempt is finalized.
+            ExamAttemptAnswer::where('exam_attempt_id', $attempt->id)->delete();
+
+            return $examResult;
+        });
 
         // Clear the exam-in-progress session markers
         session()->forget(['student_exam_id', "exam_password_verified_{$examId}"]);
+
+        if ($examResult === null) {
+            return redirect()->route('student.exams')->with('error', 'You have already completed this exam.');
+        }
 
         return view('student.result', compact('examResult', 'exam'));
     }
