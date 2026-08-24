@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -61,10 +62,10 @@ it('exposes the edit panel as a collapsible block with its quota fields', functi
     $seed = seedAttachedBank();
 
     $html = visitBanksPage($seed['exam'])->assertOk()->getContent();
-    $target = 'editQuota' . $seed['assignment']->id;
+    $target = 'editQuota'.$seed['assignment']->id;
 
-    expect($html)->toContain('data-bs-target="#' . $target . '"')
-        ->and($html)->toMatch('/<div class="collapse" id="' . $target . '"/')
+    expect($html)->toContain('data-bs-target="#'.$target.'"')
+        ->and($html)->toMatch('/<div class="collapse" id="'.$target.'"/')
         ->and($html)->toContain('name="quota_easy"')
         ->and($html)->toContain('name="quota_medium"')
         ->and($html)->toContain('name="quota_hard"');

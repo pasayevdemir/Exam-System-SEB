@@ -5,16 +5,18 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
 namespace Database\Factories;
 
+use App\Models\Question;
 use App\Models\QuestionBank;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Question>
+ * @extends Factory<Question>
  */
 class QuestionFactory extends Factory
 {
@@ -27,7 +29,7 @@ class QuestionFactory extends Factory
     {
         return [
             'question_bank_id' => QuestionBank::factory(),
-            'question_text' => fake()->sentence() . '?',
+            'question_text' => fake()->sentence().'?',
             'question_type' => 'single',
             'difficulty' => fake()->randomElement(['easy', 'medium', 'hard']),
             'file_upload_settings' => null,

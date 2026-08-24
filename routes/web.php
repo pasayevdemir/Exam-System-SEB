@@ -5,12 +5,13 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StudentController;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/start-exam');
 

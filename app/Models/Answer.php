@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -17,7 +18,7 @@ class Answer extends Model
     protected $fillable = [
         'question_id',
         'answer_text',
-        'is_correct'
+        'is_correct',
     ];
 
     protected $casts = [

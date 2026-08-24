@@ -5,11 +5,12 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
-use App\Models\ExamAttempt;
 use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Models\PasswordResetRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;

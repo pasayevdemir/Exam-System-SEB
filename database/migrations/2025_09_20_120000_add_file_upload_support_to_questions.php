@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -49,13 +50,13 @@ return new class extends Migration
     {
         Schema::table('student_answers', function (Blueprint $table) {
             $table->dropColumn([
-                'file_path', 
-                'original_filename', 
-                'file_size', 
-                'file_mime_type', 
-                'manual_score', 
-                'admin_feedback', 
-                'is_graded'
+                'file_path',
+                'original_filename',
+                'file_size',
+                'file_mime_type',
+                'manual_score',
+                'admin_feedback',
+                'is_graded',
             ]);
             $table->foreignId('answer_id')->nullable(false)->change();
         });

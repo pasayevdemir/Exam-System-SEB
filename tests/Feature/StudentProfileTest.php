@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -37,7 +38,7 @@ function giveExamHistory(User $user): void
 }
 
 /* -------------------------------------------------------------------------- */
-/* Viewing                                                                    */
+/* Viewing */
 /* -------------------------------------------------------------------------- */
 
 it('shows the signed-in student their own details', function () {
@@ -62,7 +63,7 @@ it('links to the profile from the student navigation', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Editing details                                                            */
+/* Editing details */
 /* -------------------------------------------------------------------------- */
 
 it('updates the student profile', function () {
@@ -102,7 +103,7 @@ it('rejects a fin code that belongs to another student', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* FIN code freezes once results exist                                        */
+/* FIN code freezes once results exist */
 /* -------------------------------------------------------------------------- */
 
 it('lets a student fix their fin code before they sit an exam', function () {
@@ -149,7 +150,7 @@ it('shows the fin code as locked once the student has exam history', function ()
 });
 
 /* -------------------------------------------------------------------------- */
-/* Changing your own password                                                 */
+/* Changing your own password */
 /* -------------------------------------------------------------------------- */
 
 it('changes the password when the current password is correct', function () {

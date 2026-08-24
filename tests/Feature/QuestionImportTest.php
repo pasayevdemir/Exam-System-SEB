@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -25,11 +26,11 @@ function uploadImport(QuestionBank $bank, string $filename, string $contents, ar
 
 function csvFile(array $lines): string
 {
-    return implode(',', QuestionImportService::CSV_HEADERS) . "\n" . implode("\n", $lines) . "\n";
+    return implode(',', QuestionImportService::CSV_HEADERS)."\n".implode("\n", $lines)."\n";
 }
 
 /* -------------------------------------------------------------------------- */
-/* Importing                                                                  */
+/* Importing */
 /* -------------------------------------------------------------------------- */
 
 it('imports questions from a csv into the bank', function () {
@@ -85,7 +86,7 @@ it('imports the existing json question file shape', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* All-or-nothing                                                             */
+/* All-or-nothing */
 /* -------------------------------------------------------------------------- */
 
 it('writes nothing when any row is invalid', function () {
@@ -144,7 +145,7 @@ it('skips existing questions when skip duplicates is ticked', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Guards                                                                     */
+/* Guards */
 /* -------------------------------------------------------------------------- */
 
 it('rejects a file upload row', function () {
@@ -195,7 +196,7 @@ it('never writes the uploaded file to storage', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Pages and templates                                                        */
+/* Pages and templates */
 /* -------------------------------------------------------------------------- */
 
 it('offers an import button on the bank questions page', function () {

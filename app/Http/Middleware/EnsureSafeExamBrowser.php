@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -41,7 +42,7 @@ class EnsureSafeExamBrowser
             abort(503, 'İmtahan mühiti konfiqurasiya olunmayıb.');
         }
 
-        $expected = strtolower(hash('sha256', $request->fullUrl() . $configKey));
+        $expected = strtolower(hash('sha256', $request->fullUrl().$configKey));
         $received = strtolower((string) $request->header('X-SafeExamBrowser-ConfigKeyHash'));
 
         if (! hash_equals($expected, $received)) {

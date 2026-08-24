@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnsureSafeExamBrowser;
+use App\Http\Middleware\StudentMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,9 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'student' => \App\Http\Middleware\StudentMiddleware::class,
-            'seb' => \App\Http\Middleware\EnsureSafeExamBrowser::class,
+            'admin' => AdminMiddleware::class,
+            'student' => StudentMiddleware::class,
+            'seb' => EnsureSafeExamBrowser::class,
         ]);
 
         // Behind Cloudflare + the host nginx reverse-proxy, so the app must trust
@@ -33,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handler::prepareException() rewrites TokenMismatchException into a 419
         // HttpException *before* render callbacks run, so match on that instead.
         $exceptions->render(function (HttpException $e, Request $request) {
-            if (!$e->getPrevious() instanceof TokenMismatchException) {
+            if (! $e->getPrevious() instanceof TokenMismatchException) {
                 return null;
             }
 

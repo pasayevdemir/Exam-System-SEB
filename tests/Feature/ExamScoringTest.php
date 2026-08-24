@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -243,8 +244,8 @@ it('never renders raw answer ids on the exam page', function () {
     // Answer rows are created in the admin's typed order, so their ids leak
     // which option is correct. Positions must be all the page ever exposes.
     foreach ($seed['questions'][0]['answers'] as $answer) {
-        expect($html)->not->toContain('value="' . $answer->id . '"')
-            ->and($html)->not->toContain('_' . $answer->id . '"');
+        expect($html)->not->toContain('value="'.$answer->id.'"')
+            ->and($html)->not->toContain('_'.$answer->id.'"');
     }
 });
 

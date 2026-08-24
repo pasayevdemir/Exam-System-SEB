@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -16,6 +17,7 @@ use App\Models\ExamResult;
 use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 const ADMIN_PASSWORD = 'correct-horse-battery';
 
@@ -62,7 +64,7 @@ function serveQuestion(Exam $exam, Question $question): ExamAttempt
 }
 
 /* -------------------------------------------------------------------------- */
-/* The confirm modal renders                                                  */
+/* The confirm modal renders */
 /* -------------------------------------------------------------------------- */
 
 it('renders the password confirm modal on the banks page', function () {
@@ -88,7 +90,7 @@ it('renders the password confirm modal on the dashboard', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Bank deletion                                                              */
+/* Bank deletion */
 /* -------------------------------------------------------------------------- */
 
 it('refuses to delete a bank when no password is supplied', function () {
@@ -151,7 +153,7 @@ it('refuses to delete a bank whose questions were served in an attempt', functio
 });
 
 /* -------------------------------------------------------------------------- */
-/* Exam deletion                                                              */
+/* Exam deletion */
 /* -------------------------------------------------------------------------- */
 
 it('refuses to delete an exam when the password is wrong', function () {
@@ -241,7 +243,7 @@ it('leaves an exam active when it still has another bank', function () {
 it('never flashes the admin password back into the session on a 419', function () {
     // Mirrors the CSRF-expiry path: the handler flashes input, and the session
     // store is plaintext, so a credential kept here would be readable at rest.
-    $request = Illuminate\Http\Request::create('/examadmin/banks/1', 'POST', [
+    $request = Request::create('/examadmin/banks/1', 'POST', [
         '_token' => 'stale',
         'admin_password' => 'super-secret',
         'entry_password' => 'exam-secret',

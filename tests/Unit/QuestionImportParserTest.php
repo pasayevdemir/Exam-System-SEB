@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -12,7 +13,7 @@ use App\Services\QuestionImportService;
 
 function parser(): QuestionImportService
 {
-    return new QuestionImportService();
+    return new QuestionImportService;
 }
 
 /** Builds a CSV with the canonical header and the given data lines. */
@@ -20,7 +21,7 @@ function csv(array $lines, string $delimiter = ','): string
 {
     $header = implode($delimiter, QuestionImportService::CSV_HEADERS);
 
-    return $header . "\n" . implode("\n", $lines) . "\n";
+    return $header."\n".implode("\n", $lines)."\n";
 }
 
 function parseCsv(array $lines, array $existing = [], bool $skip = false): array
@@ -34,7 +35,7 @@ function parseJson(string $json, array $existing = [], bool $skip = false): arra
 }
 
 /* -------------------------------------------------------------------------- */
-/* CSV happy paths                                                            */
+/* CSV happy paths */
 /* -------------------------------------------------------------------------- */
 
 it('parses a minimal csv row into a single choice question', function () {
@@ -107,7 +108,7 @@ it('skips blank lines in the middle of a csv', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* CSV rejections                                                             */
+/* CSV rejections */
 /* -------------------------------------------------------------------------- */
 
 it('rejects a gap in the option columns', function () {
@@ -165,7 +166,7 @@ it('accepts options that differ only by letter case', function () {
     // A question about .upper()/.toUpperCase() legitimately offers "Hello",
     // "HELLO" and "hello" as three distinct outputs — that IS the question.
     $json = '[{"question":"What does s.upper() print?",'
-        . '"variant":["Hello","HELLO","hello","Error"],"correct_answer":"HELLO"}]';
+        .'"variant":["Hello","HELLO","hello","Error"],"correct_answer":"HELLO"}]';
 
     $result = parseJson($json);
 
@@ -229,23 +230,23 @@ it('rejects a file with more rows than the import limit', function () {
 
     $result = parseCsv($lines);
 
-    expect($result['errors']->first())->toContain('more than the ' . QuestionImportService::MAX_ROWS);
+    expect($result['errors']->first())->toContain('more than the '.QuestionImportService::MAX_ROWS);
 });
 
 /* -------------------------------------------------------------------------- */
-/* Encoding and delimiters                                                    */
+/* Encoding and delimiters */
 /* -------------------------------------------------------------------------- */
 
 it('strips a byte order mark from the header row', function () {
-    $result = parser()->parse("\xEF\xBB\xBF" . csv(['Q,easy,single,A,B,,,,,1']), 'csv');
+    $result = parser()->parse("\xEF\xBB\xBF".csv(['Q,easy,single,A,B,,,,,1']), 'csv');
 
     expect($result['errors']->all())->toBe([]);
     expect($result['rows'])->toHaveCount(1);
 });
 
 it('accepts a semicolon delimited csv', function () {
-    $contents = implode(';', QuestionImportService::CSV_HEADERS) . "\n"
-        . "Q;easy;single;A;B;;;;;1\n";
+    $contents = implode(';', QuestionImportService::CSV_HEADERS)."\n"
+        ."Q;easy;single;A;B;;;;;1\n";
 
     $result = parser()->parse($contents, 'csv');
 
@@ -266,7 +267,7 @@ it('rejects an empty file', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* JSON — the shape an existing question file already uses                    */
+/* JSON — the shape an existing question file already uses */
 /* -------------------------------------------------------------------------- */
 
 it('parses the existing json question file unchanged', function () {
@@ -354,13 +355,13 @@ it('rejects json that is not a list of questions', function () {
 
 it('numbers json errors by position in the list', function () {
     $json = '[{"question":"Good","variant":["A","B"],"correct_answer":"A"},'
-        . '{"question":"Bad","variant":["A","B"],"correct_answer":"Nope"}]';
+        .'{"question":"Bad","variant":["A","B"],"correct_answer":"Nope"}]';
 
     expect(parseJson($json)['errors']->first())->toStartWith('Row 2:');
 });
 
 /* -------------------------------------------------------------------------- */
-/* Duplicates against the target bank                                         */
+/* Duplicates against the target bank */
 /* -------------------------------------------------------------------------- */
 
 it('rejects a question that already exists in the bank', function () {
@@ -389,7 +390,7 @@ it('skips existing questions when asked to', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Templates                                                                  */
+/* Templates */
 /* -------------------------------------------------------------------------- */
 
 it('generates a csv template the parser accepts', function () {

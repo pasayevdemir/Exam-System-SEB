@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -25,7 +26,6 @@ use App\Models\User;
  *  - /exams/state and /my-results/state, which hand an open page the rendered
  *    fragment when — and only when — the caller's hash has gone stale.
  */
-
 function actingAsAdmin()
 {
     return test()->withSession(['admin_logged_in' => true]);
@@ -56,7 +56,7 @@ function toggleStatus(Exam $exam)
 }
 
 /* -------------------------------------------------------------------------- */
-/* An exam being sat cannot be deactivated                                     */
+/* An exam being sat cannot be deactivated */
 /* -------------------------------------------------------------------------- */
 
 it('refuses to deactivate an exam a student is sitting', function () {
@@ -150,7 +150,7 @@ it('refuses a student a fresh attempt on an exam deactivated under the lock', fu
 });
 
 /* -------------------------------------------------------------------------- */
-/* The exams-list poll endpoint                                                */
+/* The exams-list poll endpoint */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -276,7 +276,7 @@ it('is scoped to the calling student', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* The results poll endpoint                                                   */
+/* The results poll endpoint */
 /* -------------------------------------------------------------------------- */
 
 it('replaces grading-pending with a score once an admin grades a submission', function () {
@@ -335,7 +335,7 @@ it('does not let the results state route be swallowed by the result-id route', f
 });
 
 /* -------------------------------------------------------------------------- */
-/* The page and the endpoint must agree on the hash                            */
+/* The page and the endpoint must agree on the hash */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -345,9 +345,9 @@ it('does not let the results state route be swallowed by the result-id route', f
  */
 function renderedVersion(string $html, string $containerId): string
 {
-    expect($html)->toMatch('/id="' . $containerId . '" data-v="[0-9a-f]{40}"/');
+    expect($html)->toMatch('/id="'.$containerId.'" data-v="[0-9a-f]{40}"/');
 
-    preg_match('/id="' . $containerId . '" data-v="([0-9a-f]{40})"/', $html, $matches);
+    preg_match('/id="'.$containerId.'" data-v="([0-9a-f]{40})"/', $html, $matches);
 
     return $matches[1];
 }
@@ -377,7 +377,7 @@ it('hands the results page a hash the endpoint immediately agrees with', functio
 });
 
 /* -------------------------------------------------------------------------- */
-/* Both endpoints sit behind the student guard                                 */
+/* Both endpoints sit behind the student guard */
 /* -------------------------------------------------------------------------- */
 
 it('redirects a guest away from the poll endpoints', function (string $route) {
@@ -385,7 +385,7 @@ it('redirects a guest away from the poll endpoints', function (string $route) {
 })->with(['student.exams-state', 'student.my-results-state']);
 
 /* -------------------------------------------------------------------------- */
-/* Keep-alive carries the exam's active flag                                   */
+/* Keep-alive carries the exam's active flag */
 /* -------------------------------------------------------------------------- */
 
 it('reports the exam as active on keep-alive while it is being sat', function () {

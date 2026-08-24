@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -15,11 +16,12 @@ use App\Models\Question;
 use App\Models\QuestionBank;
 use App\Models\StudentAnswer;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /**
  * A question with $texts as its options, the one at $correct marked right.
  *
- * @return array{question: Question, answers: \Illuminate\Support\Collection<int, Answer>}
+ * @return array{question: Question, answers: Collection<int, Answer>}
  */
 function seedQuestion(array $texts = ['A', 'B', 'C', 'D'], int $correct = 0): array
 {

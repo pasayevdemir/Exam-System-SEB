@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -99,8 +100,8 @@ it('gives every question a map button and a scroll anchor', function () {
     $response = $this->actingAs($user)->get(route('student.exam', $seed['exam']->id))->assertOk();
 
     foreach ($seed['questions'] as $question) {
-        $response->assertSee('id="question-card-' . $question->id . '"', false);
-        $response->assertSee('data-question="' . $question->id . '"', false);
+        $response->assertSee('id="question-card-'.$question->id.'"', false);
+        $response->assertSee('data-question="'.$question->id.'"', false);
     }
 });
 
@@ -144,7 +145,7 @@ it('still exposes no answer ids in the page', function () {
         ->getContent();
 
     foreach (Answer::where('is_correct', true)->pluck('id') as $answerId) {
-        expect($content)->not->toContain('value="' . $answerId . '"');
+        expect($content)->not->toContain('value="'.$answerId.'"');
     }
 });
 
@@ -167,6 +168,6 @@ it('marks a restored draft answer so the map can render it green', function () {
     $this->actingAs($user)
         ->get(route('student.exam', $seed['exam']->id))
         ->assertOk()
-        ->assertSee('id="answer_' . $seed['questions'][0]->id . '_1"', false)
+        ->assertSee('id="answer_'.$seed['questions'][0]->id.'_1"', false)
         ->assertSee('checked', false);
 });

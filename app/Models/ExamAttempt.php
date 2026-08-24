@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -55,7 +56,7 @@ class ExamAttempt extends Model
             ->whereNull('completed_at')
             ->where(function ($q) use ($grace) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now()->subSeconds($grace));
+                    ->orWhere('expires_at', '>', now()->subSeconds($grace));
             });
     }
 

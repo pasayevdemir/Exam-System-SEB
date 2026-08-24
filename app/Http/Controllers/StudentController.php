@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -12,6 +13,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ConcurrentExamAttemptException;
 use App\Exceptions\ExamClosedException;
+use App\Models\Answer;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\ExamAttemptAnswer;
@@ -63,7 +65,7 @@ class StudentController extends Controller
         $request->session()->regenerate();
 
         $response = redirect()->route('student.profile')
-                              ->with('success', 'Account created successfully! Welcome.');
+            ->with('success', 'Account created successfully! Welcome.');
 
         return $this->clearAdminSession($request, $response);
     }
@@ -99,7 +101,7 @@ class StudentController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
         }
 
@@ -222,7 +224,7 @@ class StudentController extends Controller
     {
         $exam = Exam::findOrFail($examId);
 
-        if (!$exam->is_active) {
+        if (! $exam->is_active) {
             return redirect()->route('student.exams')->with('error', 'This exam is currently not active.');
         }
 
@@ -247,8 +249,8 @@ class StudentController extends Controller
 
         session(['student_exam_id' => $exam->id]);
 
-        if (!$attempt) {
-            if ($exam->requiresEntryPassword() && !session()->get("exam_password_verified_{$exam->id}")) {
+        if (! $attempt) {
+            if ($exam->requiresEntryPassword() && ! session()->get("exam_password_verified_{$exam->id}")) {
                 return view('student.exam-password', compact('exam'));
             }
 
@@ -266,7 +268,8 @@ class StudentController extends Controller
                 // the list will simply no longer show it.
                 return redirect()->route('student.exams')->with('error', 'This exam is currently not active.');
             } catch (\RuntimeException $e) {
-                \Log::error('Exam generation failed for exam ID ' . $exam->id . ': ' . $e->getMessage());
+                \Log::error('Exam generation failed for exam ID '.$exam->id.': '.$e->getMessage());
+
                 return redirect()->route('student.exams')->with('error', 'This exam could not be started right now. Please contact your administrator.');
             }
         }
@@ -327,7 +330,7 @@ class StudentController extends Controller
             ->whereNull('completed_at')
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json(['success' => false, 'message' => 'No active attempt.'], 409);
         }
 
@@ -345,7 +348,7 @@ class StudentController extends Controller
             ->where('question_id', $validated['question_id'])
             ->first();
 
-        if (!$attemptQuestion) {
+        if (! $attemptQuestion) {
             return response()->json(['success' => false, 'message' => 'Question not part of this attempt.'], 422);
         }
 
@@ -395,7 +398,7 @@ class StudentController extends Controller
             ->whereNull('completed_at')
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json(['success' => false, 'message' => 'No active attempt.'], 409);
         }
 
@@ -419,7 +422,7 @@ class StudentController extends Controller
             'entry_password' => 'required|string',
         ]);
 
-        if (!$exam->requiresEntryPassword() || $request->entry_password !== $exam->entry_password) {
+        if (! $exam->requiresEntryPassword() || $request->entry_password !== $exam->entry_password) {
             return back()->withErrors(['entry_password' => 'Incorrect password.']);
         }
 
@@ -471,7 +474,7 @@ class StudentController extends Controller
                 $allowedExtensions = implode(',', $question->getAllowedExtensions());
                 $maxSizeMb = $question->getMaxFileSize();
 
-                $rules["file_uploads.{$question->id}"] = "nullable|file|mimes:{$allowedExtensions}|max:" . ($maxSizeMb * 1024);
+                $rules["file_uploads.{$question->id}"] = "nullable|file|mimes:{$allowedExtensions}|max:".($maxSizeMb * 1024);
             } else {
                 // Answers arrive as positions in this attempt's shuffled option
                 // order, so the bound is the option count - not an answers.id.
@@ -544,7 +547,7 @@ class StudentController extends Controller
                     // Single choice: answerData is a single answer ID. The answer
                     // must belong to the question being scored - without that check
                     // one known-correct id could be replayed across every question.
-                    $answer = \App\Models\Answer::find($answerData);
+                    $answer = Answer::find($answerData);
                     if ($answer && $answer->question_id === $question->id && $answer->is_correct) {
                         $correctAnswers++;
                     }
@@ -579,11 +582,11 @@ class StudentController extends Controller
         // snapshot of a file the way there is for MCQ answers.
         $storedFiles = [];
 
-        if (!$isExpired && $request->has('file_uploads')) {
+        if (! $isExpired && $request->has('file_uploads')) {
             foreach ($request->file('file_uploads') as $questionId => $uploadedFile) {
                 if ($uploadedFile && $uploadedFile->isValid()) {
                     $extension = $uploadedFile->getClientOriginalExtension();
-                    $filename = 'exam_' . $exam->id . '_student_' . Auth::id() . '_question_' . $questionId . '_' . time() . '.' . $extension;
+                    $filename = 'exam_'.$exam->id.'_student_'.Auth::id().'_question_'.$questionId.'_'.time().'.'.$extension;
 
                     $originalName = $uploadedFile->getClientOriginalName();
                     $fileSize = $uploadedFile->getSize();
@@ -613,7 +616,7 @@ class StudentController extends Controller
         //
         // Returns null when the attempt was finalized by whoever got here first.
         $examResult = DB::transaction(function () use (
-            $attempt, $exam, $examId, $attemptQuestions, $questionsById,
+            $attempt, $exam, $attemptQuestions, $questionsById,
             $submittedAnswers, $correctAnswers, $score, $isExpired, $storedFiles
         ) {
             $locked = ExamAttempt::whereKey($attempt->id)->lockForUpdate()->first();
@@ -629,7 +632,7 @@ class StudentController extends Controller
                 'total_questions' => $attemptQuestions->count(),
                 'correct_answers' => $correctAnswers,
                 'score' => $score,
-                'submitted_at' => now()
+                'submitted_at' => now(),
             ]);
 
             // Store MCQ answers
@@ -645,7 +648,7 @@ class StudentController extends Controller
                             StudentAnswer::create([
                                 'exam_result_id' => $examResult->id,
                                 'question_id' => $questionId,
-                                'answer_id' => $answerData
+                                'answer_id' => $answerData,
                             ]);
                         }
                     } else {
@@ -657,7 +660,7 @@ class StudentController extends Controller
                             StudentAnswer::create([
                                 'exam_result_id' => $examResult->id,
                                 'question_id' => $questionId,
-                                'answer_id' => $answerId
+                                'answer_id' => $answerId,
                             ]);
                         }
                     }
@@ -673,7 +676,7 @@ class StudentController extends Controller
                     'original_filename' => $file['original_filename'],
                     'file_size' => $file['file_size'],
                     'file_mime_type' => $file['file_mime_type'],
-                    'is_graded' => false
+                    'is_graded' => false,
                 ]);
             }
 

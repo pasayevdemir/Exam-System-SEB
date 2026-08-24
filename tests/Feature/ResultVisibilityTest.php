@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -80,7 +81,7 @@ function viewResult(array $seed)
 }
 
 /* -------------------------------------------------------------------------- */
-/* The page must never expose exam content                                    */
+/* The page must never expose exam content */
 /* -------------------------------------------------------------------------- */
 
 it('never shows the question text on a student result', function () {
@@ -142,7 +143,7 @@ it('still shows the score while a retake is in progress', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* What the student is still shown                                            */
+/* What the student is still shown */
 /* -------------------------------------------------------------------------- */
 
 it('shows the sitting summary', function () {
@@ -201,7 +202,7 @@ it('reports grading as pending while a file upload is ungraded', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Access control                                                             */
+/* Access control */
 /* -------------------------------------------------------------------------- */
 
 it('keeps another student out of a result that is not theirs', function () {

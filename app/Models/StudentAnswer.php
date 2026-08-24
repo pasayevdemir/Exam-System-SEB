@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -24,7 +25,7 @@ class StudentAnswer extends Model
         'file_mime_type',
         'manual_score',
         'admin_feedback',
-        'is_graded'
+        'is_graded',
     ];
 
     protected $casts = [
@@ -53,7 +54,7 @@ class StudentAnswer extends Model
      */
     public function isFileUpload()
     {
-        return !is_null($this->file_path);
+        return ! is_null($this->file_path);
     }
 
     /**
@@ -62,9 +63,10 @@ class StudentAnswer extends Model
      */
     public function getFileUrl()
     {
-        if (!$this->file_path) {
+        if (! $this->file_path) {
             return null;
         }
+
         return route('admin.download-submission', $this->id);
     }
 
@@ -73,17 +75,17 @@ class StudentAnswer extends Model
      */
     public function getFormattedFileSize()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return null;
         }
-        
+
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 }

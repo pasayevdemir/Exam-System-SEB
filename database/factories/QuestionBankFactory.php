@@ -5,16 +5,18 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
 namespace Database\Factories;
 
+use App\Models\QuestionBank;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\QuestionBank>
+ * @extends Factory<QuestionBank>
  */
 class QuestionBankFactory extends Factory
 {

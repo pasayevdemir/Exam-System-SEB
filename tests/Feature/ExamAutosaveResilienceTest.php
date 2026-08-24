@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -29,5 +30,5 @@ it('renders the connection indicator and retry/queue client logic on the exam pa
         ->and($html)->toContain('id="connection-label"')
         ->and($html)->toContain('function postAnswerWithRetry')
         ->and($html)->toContain('function flushAutosaveQueue')
-        ->and($html)->toContain("err.status === 409");
+        ->and($html)->toContain('err.status === 409');
 });

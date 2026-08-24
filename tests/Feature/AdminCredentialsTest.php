@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -30,7 +31,7 @@ function signInAsAdmin(string $username, string $password)
 }
 
 /* -------------------------------------------------------------------------- */
-/* Resolution: database row wins, config is a bootstrap fallback              */
+/* Resolution: database row wins, config is a bootstrap fallback */
 /* -------------------------------------------------------------------------- */
 
 it('logs the admin in with the environment credentials when no database credential exists', function () {
@@ -65,7 +66,7 @@ it('falls back to the environment when the credentials table is missing', functi
 });
 
 /* -------------------------------------------------------------------------- */
-/* One source of truth for both gates                                         */
+/* One source of truth for both gates */
 /* -------------------------------------------------------------------------- */
 
 it('gates a bank deletion on the database password once one is set', function () {
@@ -87,7 +88,7 @@ it('gates a bank deletion on the database password once one is set', function ()
 });
 
 /* -------------------------------------------------------------------------- */
-/* Changing the credential                                                    */
+/* Changing the credential */
 /* -------------------------------------------------------------------------- */
 
 it('stores the new admin password as a hash, never as plaintext', function () {
@@ -155,7 +156,7 @@ it('renders the settings page with the current username', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Fallback warning                                                           */
+/* Fallback warning */
 /* -------------------------------------------------------------------------- */
 
 it('warns on the dashboard while the admin password comes from the environment', function () {

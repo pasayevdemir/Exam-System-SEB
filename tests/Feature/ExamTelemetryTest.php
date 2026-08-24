@@ -5,11 +5,11 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
 use App\Models\ExamAttemptEvent;
-use App\Models\ExamResult;
 use App\Models\User;
 
 function logExamEvent(User $user, $exam, string $type)

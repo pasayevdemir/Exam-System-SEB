@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -28,7 +29,7 @@ class Question extends Model
         'question_text',
         'question_type',
         'difficulty',
-        'file_upload_settings'
+        'file_upload_settings',
     ];
 
     protected $casts = [
@@ -89,9 +90,10 @@ class Question extends Model
      */
     public function getAllowedExtensions()
     {
-        if (!$this->isFileUpload() || !$this->file_upload_settings) {
+        if (! $this->isFileUpload() || ! $this->file_upload_settings) {
             return [];
         }
+
         return $this->file_upload_settings['allowed_extensions'] ?? ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
     }
 
@@ -100,9 +102,10 @@ class Question extends Model
      */
     public function getMaxFileSize()
     {
-        if (!$this->isFileUpload() || !$this->file_upload_settings) {
+        if (! $this->isFileUpload() || ! $this->file_upload_settings) {
             return 10; // Default 10MB
         }
+
         return $this->file_upload_settings['max_size_mb'] ?? 10;
     }
 }

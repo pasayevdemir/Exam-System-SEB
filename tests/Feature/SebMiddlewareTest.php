@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -46,7 +47,7 @@ it('accepts a request with the correct hash', function () {
     config(['seb.required' => true, 'seb.config_key' => 'test-config-key']);
 
     $url = route('student.keep-alive');
-    $hash = hash('sha256', $url . 'test-config-key');
+    $hash = hash('sha256', $url.'test-config-key');
 
     actingStudent()
         ->withHeaders(['X-SafeExamBrowser-ConfigKeyHash' => $hash])
@@ -58,7 +59,7 @@ it('accepts a hash in a different case, since SEB clients are inconsistent about
     config(['seb.required' => true, 'seb.config_key' => 'test-config-key']);
 
     $url = route('student.keep-alive');
-    $hash = strtoupper(hash('sha256', $url . 'test-config-key'));
+    $hash = strtoupper(hash('sha256', $url.'test-config-key'));
 
     actingStudent()
         ->withHeaders(['X-SafeExamBrowser-ConfigKeyHash' => $hash])

@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -69,7 +70,7 @@ class QuestionImportService
         array $existingQuestionTexts = [],
         bool $skipDuplicates = false
     ): array {
-        $errors = new MessageBag();
+        $errors = new MessageBag;
 
         // Excel on Windows always writes a BOM and it corrupts the first header.
         $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents);
@@ -95,8 +96,8 @@ class QuestionImportService
         }
 
         if (count($candidates) > self::MAX_ROWS) {
-            return $this->fail($errors, 'The file has ' . count($candidates)
-                . ' questions, which is more than the ' . self::MAX_ROWS . ' allowed in one import.');
+            return $this->fail($errors, 'The file has '.count($candidates)
+                .' questions, which is more than the '.self::MAX_ROWS.' allowed in one import.');
         }
 
         $existing = [];
@@ -121,7 +122,8 @@ class QuestionImportService
 
             // A repeat inside one file always signals a broken source file.
             if (isset($seen[$key])) {
-                $errors->add('row.' . $label, "Row {$label}: duplicates the question on row {$seen[$key]}.");
+                $errors->add('row.'.$label, "Row {$label}: duplicates the question on row {$seen[$key]}.");
+
                 continue;
             }
             $seen[$key] = $label;
@@ -129,10 +131,12 @@ class QuestionImportService
             if (isset($existing[$key])) {
                 if ($skipDuplicates) {
                     $skipped++;
+
                     continue;
                 }
 
-                $errors->add('row.' . $label, "Row {$label}: this question already exists in this bank.");
+                $errors->add('row.'.$label, "Row {$label}: this question already exists in this bank.");
+
                 continue;
             }
 
@@ -184,8 +188,8 @@ class QuestionImportService
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Templates — generated from the same constant the parser consumes, so    */
-    /* they cannot drift out of sync the way a checked-in static file would.   */
+    /* Templates — generated from the same constant the parser consumes, so */
+    /* they cannot drift out of sync the way a checked-in static file would. */
     /* ---------------------------------------------------------------------- */
 
     public function csvTemplate(): string
@@ -248,7 +252,7 @@ class QuestionImportService
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Readers                                                                */
+    /* Readers */
     /* ---------------------------------------------------------------------- */
 
     /**
@@ -277,7 +281,7 @@ class QuestionImportService
             if (! in_array($required, $header, true)) {
                 fclose($handle);
                 $errors->add('file', "The CSV is missing the \"{$required}\" column. "
-                    . 'Download the template to see the expected columns.');
+                    .'Download the template to see the expected columns.');
 
                 return [];
             }
@@ -301,7 +305,7 @@ class QuestionImportService
 
             $options = [];
             for ($i = 1; $i <= self::MAX_OPTIONS; $i++) {
-                $options[] = $assoc['option_' . $i] ?? '';
+                $options[] = $assoc['option_'.$i] ?? '';
             }
 
             $candidates[] = [
@@ -327,7 +331,7 @@ class QuestionImportService
         $decoded = json_decode($contents, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $errors->add('file', 'The file is not valid JSON: ' . json_last_error_msg());
+            $errors->add('file', 'The file is not valid JSON: '.json_last_error_msg());
 
             return [];
         }
@@ -349,7 +353,8 @@ class QuestionImportService
             $label = $index + 1;
 
             if (! is_array($item)) {
-                $errors->add('row.' . $label, "Question {$label}: expected an object.");
+                $errors->add('row.'.$label, "Question {$label}: expected an object.");
+
                 continue;
             }
 
@@ -376,7 +381,7 @@ class QuestionImportService
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Validation                                                             */
+    /* Validation */
     /* ---------------------------------------------------------------------- */
 
     private function validateCandidate(array $candidate, MessageBag $errors): ?array
@@ -386,7 +391,7 @@ class QuestionImportService
 
         $questionText = is_string($candidate['question']) ? trim($candidate['question']) : '';
         if ($questionText === '') {
-            $errors->add('row.' . $label, "Row {$label}: the question text is empty.");
+            $errors->add('row.'.$label, "Row {$label}: the question text is empty.");
             $ok = false;
         }
 
@@ -395,7 +400,7 @@ class QuestionImportService
             $difficulty = 'medium';
         }
         if (! in_array($difficulty, self::DIFFICULTIES, true)) {
-            $errors->add('row.' . $label, "Row {$label}: difficulty \"{$candidate['difficulty']}\" is not one of easy, medium, hard.");
+            $errors->add('row.'.$label, "Row {$label}: difficulty \"{$candidate['difficulty']}\" is not one of easy, medium, hard.");
             $ok = false;
         }
 
@@ -404,7 +409,7 @@ class QuestionImportService
             $message = $type === 'file_upload'
                 ? "Row {$label}: file upload questions cannot be imported — add them from the Add New Question form."
                 : "Row {$label}: type \"{$candidate['type']}\" is not one of single, multiple.";
-            $errors->add('row.' . $label, $message);
+            $errors->add('row.'.$label, $message);
             $ok = false;
         }
 
@@ -426,7 +431,7 @@ class QuestionImportService
         }
 
         if ($type === 'single' && count($correct) !== 1) {
-            $errors->add('row.' . $label, "Row {$label}: a single choice question needs exactly one correct option, found " . count($correct) . '.');
+            $errors->add('row.'.$label, "Row {$label}: a single choice question needs exactly one correct option, found ".count($correct).'.');
 
             return null;
         }
@@ -451,13 +456,14 @@ class QuestionImportService
         foreach ($raw as $value) {
             if ($value === '') {
                 $gapSeen = true;
+
                 continue;
             }
 
             // A gap would shift every later index and silently mark the wrong
             // option correct, so it is an error rather than a quiet compaction.
             if ($gapSeen) {
-                $errors->add('row.' . $label, "Row {$label}: there is an empty option before a filled one. Fill the options in order, without gaps.");
+                $errors->add('row.'.$label, "Row {$label}: there is an empty option before a filled one. Fill the options in order, without gaps.");
                 $ok = false;
 
                 return null;
@@ -467,14 +473,14 @@ class QuestionImportService
         }
 
         if (count($options) < self::MIN_OPTIONS) {
-            $errors->add('row.' . $label, "Row {$label}: at least " . self::MIN_OPTIONS . ' options are required, found ' . count($options) . '.');
+            $errors->add('row.'.$label, "Row {$label}: at least ".self::MIN_OPTIONS.' options are required, found '.count($options).'.');
             $ok = false;
 
             return null;
         }
 
         if (count($options) > self::MAX_OPTIONS) {
-            $errors->add('row.' . $label, "Row {$label}: at most " . self::MAX_OPTIONS . ' options are allowed, found ' . count($options) . '.');
+            $errors->add('row.'.$label, "Row {$label}: at most ".self::MAX_OPTIONS.' options are allowed, found '.count($options).'.');
             $ok = false;
 
             return null;
@@ -487,7 +493,7 @@ class QuestionImportService
         $seen = [];
         foreach ($options as $option) {
             if (isset($seen[$option])) {
-                $errors->add('row.' . $label, "Row {$label}: the option \"{$option}\" appears twice.");
+                $errors->add('row.'.$label, "Row {$label}: the option \"{$option}\" appears twice.");
                 $ok = false;
 
                 return null;
@@ -515,7 +521,7 @@ class QuestionImportService
         $tokens = array_values(array_filter($tokens, fn ($t) => $t !== ''));
 
         if ($tokens === []) {
-            $errors->add('row.' . $label, "Row {$label}: no correct option is given.");
+            $errors->add('row.'.$label, "Row {$label}: no correct option is given.");
 
             return null;
         }
@@ -526,7 +532,7 @@ class QuestionImportService
             $index = $this->resolveToken($token, $options);
 
             if ($index === null) {
-                $errors->add('row.' . $label, "Row {$label}: \"{$token}\" does not match any of this question's options.");
+                $errors->add('row.'.$label, "Row {$label}: \"{$token}\" does not match any of this question's options.");
 
                 return null;
             }
@@ -584,7 +590,7 @@ class QuestionImportService
     }
 
     /* ---------------------------------------------------------------------- */
-    /* Helpers                                                                */
+    /* Helpers */
     /* ---------------------------------------------------------------------- */
 
     /** Excel writes ";" in several locales, and tab-separated exports are common. */
@@ -644,11 +650,11 @@ class QuestionImportService
             return $errors;
         }
 
-        $capped = new MessageBag();
+        $capped = new MessageBag;
         foreach (array_slice($all, 0, self::MAX_REPORTED_ERRORS) as $index => $message) {
-            $capped->add('row.' . $index, $message);
+            $capped->add('row.'.$index, $message);
         }
-        $capped->add('file', '...and ' . (count($all) - self::MAX_REPORTED_ERRORS) . ' more problems.');
+        $capped->add('file', '...and '.(count($all) - self::MAX_REPORTED_ERRORS).' more problems.');
 
         return $capped;
     }

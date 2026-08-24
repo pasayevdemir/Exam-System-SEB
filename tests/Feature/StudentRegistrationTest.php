@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -81,7 +82,7 @@ it('rejects a duplicate fin code', function () {
 });
 
 /* -------------------------------------------------------------------------- */
-/* Admin session left over in the same browser                                */
+/* Admin session left over in the same browser */
 /* -------------------------------------------------------------------------- */
 
 it('clears an admin session when someone registers in the same browser', function () {

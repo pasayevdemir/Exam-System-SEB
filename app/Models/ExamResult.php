@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -23,7 +24,7 @@ class ExamResult extends Model
         'total_questions',
         'correct_answers',
         'score',
-        'submitted_at'
+        'submitted_at',
     ];
 
     protected $casts = [
@@ -59,7 +60,7 @@ class ExamResult extends Model
     {
         if ($this->relationLoaded('studentAnswers')) {
             return $this->studentAnswers
-                ->contains(fn ($answer) => $answer->file_path !== null && !$answer->is_graded);
+                ->contains(fn ($answer) => $answer->file_path !== null && ! $answer->is_graded);
         }
 
         return $this->studentAnswers()

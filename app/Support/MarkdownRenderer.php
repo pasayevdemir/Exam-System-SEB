@@ -28,14 +28,14 @@ class MarkdownRenderer
                 'max_nesting_level' => 20,
             ]);
 
-            $environment->addExtension(new CommonMarkCoreExtension());
-            $environment->addExtension(new GithubFlavoredMarkdownExtension());
+            $environment->addExtension(new CommonMarkCoreExtension);
+            $environment->addExtension(new GithubFlavoredMarkdownExtension);
 
             // Math has to be claimed while the cursor is still on the opening
             // `$`, or `$x_1 y_2$` loses its underscores to <em> before KaTeX
             // ever sees the formula.
-            $environment->addInlineParser(new MathInlineParser(), 100);
-            $environment->addRenderer(MathNode::class, new MathNodeRenderer());
+            $environment->addInlineParser(new MathInlineParser, 100);
+            $environment->addRenderer(MathNode::class, new MathNodeRenderer);
 
             self::$converter = new MarkdownConverter($environment);
         }
@@ -97,6 +97,6 @@ class MarkdownRenderer
             return $plain;
         }
 
-        return \rtrim(\mb_substr($plain, 0, $limit)) . '…';
+        return \rtrim(\mb_substr($plain, 0, $limit)).'…';
     }
 }

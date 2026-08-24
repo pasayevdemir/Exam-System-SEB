@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -16,7 +17,6 @@ use App\Models\User;
  * stops it, a dropped connection hides the divergence), so the page re-anchors
  * itself on the server's reading. These cover the server half of that contract.
  */
-
 it('reports the remaining time on keep-alive', function () {
     $user = User::factory()->create();
     $seed = seedAttempt($user, [

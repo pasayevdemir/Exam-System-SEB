@@ -5,6 +5,7 @@
  *
  * @author    Damir Pashayev <pashayevdamir@gmail.com>
  * @copyright 2026 Damir Pashayev. All rights reserved.
+ *
  * @link      https://github.com/pasayevdemir
  */
 
@@ -23,7 +24,7 @@ class Exam extends Model
         'description',
         'is_active',
         'time_limit_minutes',
-        'entry_password'
+        'entry_password',
     ];
 
     protected $casts = [
