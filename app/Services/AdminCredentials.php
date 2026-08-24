@@ -85,6 +85,11 @@ class AdminCredentials
     /**
      * Verify the password on its own — used to re-authorise destructive actions,
      * where the admin is already signed in and only re-proves the password.
+     *
+     * Being signed in is deliberately not enough to delete a bank or an exam: an
+     * unattended open session should not be one click away from wiping content.
+     * The comparison lives here so that gate and the login check can never
+     * disagree about which password is current.
      */
     public function passwordMatches(?string $candidate): bool
     {

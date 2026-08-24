@@ -7,154 +7,148 @@ parameters:
 			path: app/Console/Commands/SebVerify.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$examQuestionBanks\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$quota_total\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamQuestionBank\:\:\$questionBank\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$examQuestionBanks\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$quota_total\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\PasswordResetRequest\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\PasswordResetRequest\>\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\QuestionBank\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\QuestionBank\>\:\:\$questions_count\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$examResult\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$question\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Call to static method error\(\) on an unknown class Log\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
-			identifier: larastan.relationExistence
-			count: 4
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''examResult'' is not found in App\\Models\\StudentAnswer model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/AdminController.php
+			path: app/Http/Controllers/BankQuestionController.php
 
 		-
 			message: '#^Relation ''questionBank'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 3
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 2
-			path: app/Http/Controllers/AdminController.php
+			path: app/Http/Controllers/BankQuestionController.php
 
 		-
 			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
-			path: app/Http/Controllers/AdminController.php
+			path: app/Http/Controllers/BankQuestionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$examQuestionBanks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\:\:\$quota_total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamQuestionBank\:\:\$questionBank\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamBankController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$examQuestionBanks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamBankController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ExamBankController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$examQuestionBanks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Exam\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Exam\>\:\:\$quota_total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/ExamController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamResultController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamResultController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExamResultController.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class Log\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ExamResultController.php
 
 		-
 			message: '#^Relation ''user'' is not found in App\\Models\\ExamResult model\.$#'
 			identifier: larastan.relationExistence
-			count: 4
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''user'' is not found in App\\Models\\PasswordResetRequest model\.$#'
-			identifier: larastan.relationExistence
-			count: 2
-			path: app/Http/Controllers/AdminController.php
+			count: 3
+			path: app/Http/Controllers/ExamResultController.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>fin_code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/AdminController.php
+			path: app/Http/Controllers/ExamResultController.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/AdminController.php
+			path: app/Http/Controllers/ExamResultController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\QuestionBank\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\QuestionBank\>\:\:\$questions_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/QuestionBankController.php
+
+		-
+			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QuestionBankController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PasswordResetRequest\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\PasswordResetRequest\>\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/StudentAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/StudentAdminController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\PasswordResetRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/StudentAdminController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\ExamAttempt\:\:\$exam\.$#'
@@ -215,6 +209,48 @@ parameters:
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Http/Controllers/StudentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$examResult\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$question\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Relation ''examResult'' is not found in App\\Models\\StudentAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/SubmissionGradingController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ExamResult model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SubmissionGradingController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'

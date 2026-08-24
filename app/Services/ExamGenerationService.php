@@ -48,7 +48,7 @@ class ExamGenerationService
             // controller checked it, but outside any transaction: without this,
             // a Start that lands exactly as an admin deactivates the exam slips
             // past both guards and strands an attempt on a closed exam. Ordering
-            // against AdminController::toggleExamStatus is now decided by the
+            // against ExamController::toggleExamStatus is now decided by the
             // lock - whichever transaction gets the row first wins outright.
             if (! DB::table('exams')->where('id', $exam->id)->lockForUpdate()->value('is_active')) {
                 throw new ExamClosedException($exam);
