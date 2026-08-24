@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\CommonMarkCoreExtension;
 use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
 
@@ -17,6 +18,7 @@ class MarkdownRenderer
                 'html_input' => 'escape',
                 'allow_unsafe_links' => false,
             ]);
+            $environment->addExtension(new CommonMarkCoreExtension());
             $environment->addExtension(new GithubFlavoredMarkdownExtension());
             self::$converter = new MarkdownConverter($environment);
         }
