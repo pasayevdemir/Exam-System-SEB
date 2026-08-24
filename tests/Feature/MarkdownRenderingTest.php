@@ -121,6 +121,18 @@ it('does not treat currency amounts as math', function () {
         ->not->toContain('ps-math');
 });
 
+// A price range has no space to separate the two amounts, so the whitespace
+// guard alone let "$5-$7" through as the formula "5-" plus a stray 7.
+it('does not treat a price range as math', function () {
+    expect(MarkdownRenderer::render('Costs $5-$7 depending on size'))
+        ->not->toContain('ps-math');
+});
+
+it('still renders a formula that is only digits', function () {
+    expect(MarkdownRenderer::render('The answer is $42$ exactly'))
+        ->toContain('<span class="ps-math" data-display="0">42</span>');
+});
+
 it('renders a question whose entire text is zero', function () {
     expect(MarkdownRenderer::render('0'))->toContain('0');
 });

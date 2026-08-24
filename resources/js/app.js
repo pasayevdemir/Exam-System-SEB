@@ -20,6 +20,19 @@ const pageModules = {
     exam: () => import('./exam/index.js'),
 };
 
+function announceScriptFailure() {
+    if (document.getElementById('psScriptFailure')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'psScriptFailure';
+    banner.className = 'alert alert-danger m-3';
+    banner.setAttribute('role', 'alert');
+    banner.textContent = 'Səhifə tam yüklənmədi — cavablarınız avtomatik saxlanılmaya bilər. '
+        + 'Zəhmət olmasa səhifəni yeniləyin.';
+
+    document.body.prepend(banner);
+}
+
 /**
  * Typeset the `$...$` spans the markdown renderer left behind.
  *
@@ -49,7 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const page = document.body.dataset.page;
 
     if (page && pageModules[page]) {
-        pageModules[page]().then(module => module.start());
+        pageModules[page]()
+            .then(module => module.start())
+            .catch(error => {
+                // On the exam page this means no autosave, no countdown and no
+                // auto-submit. Failing silently would let a student sit a whole
+                // exam that never saves anything, so say so loudly enough to act
+                // on rather than only logging it.
+                console.error(`Page module "${page}" failed to load`, error);
+                announceScriptFailure();
+            });
     }
 });
 

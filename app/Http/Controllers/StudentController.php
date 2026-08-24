@@ -713,6 +713,13 @@ class StudentController extends Controller
         session()->forget(['student_exam_id', "exam_password_verified_{$examId}"]);
 
         if ($examResult === null) {
+            // Someone finalised this attempt between storing the uploads above
+            // and taking the lock. Those files now belong to no StudentAnswer
+            // row, and nothing else will ever come looking for them.
+            foreach ($storedFiles as $file) {
+                Storage::disk('local')->delete($file['file_path']);
+            }
+
             return redirect()->route('student.exams')->with('error', 'You have already completed this exam.');
         }
 

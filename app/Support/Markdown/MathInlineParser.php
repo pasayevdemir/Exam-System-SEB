@@ -15,13 +15,17 @@ use League\CommonMark\Parser\InlineParserContext;
 final class MathInlineParser implements InlineParserInterface
 {
     /**
-     * Both delimiters refuse a leading backslash so `\$` still means a literal
-     * dollar sign, and the inline form refuses whitespace right inside the
-     * delimiters — that is what keeps "costs $5 and $10" out of math mode.
+     * Three guards, each earning its place against real question text:
+     *
+     * - a leading backslash is refused, so `\$` still means a literal dollar
+     * - whitespace right inside the delimiters is refused, which keeps
+     *   "costs $5 and $10" out of math mode
+     * - a digit straight after the closing delimiter is refused, which stops
+     *   "$5-$7" being read as the formula "5-" trailed by a stray 7
      */
     public function getMatchDefinition(): InlineParserMatch
     {
-        return InlineParserMatch::regex('(?<!\\\\)\$\$(.+?)\$\$|(?<!\\\\)\$([^\s$](?:[^$]*?[^\s$])?)\$');
+        return InlineParserMatch::regex('(?<!\\\\)\$\$(.+?)\$\$|(?<!\\\\)\$([^\s$](?:[^$]*?[^\s$])?)\$(?!\d)');
     }
 
     public function parse(InlineParserContext $inlineContext): bool

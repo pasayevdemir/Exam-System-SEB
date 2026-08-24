@@ -13,6 +13,11 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
     let autosaveSeq = 0;
     const questionAttemptSeq = {};
 
+    // Questions with a live save in progress. A queued entry is by definition
+    // older than whatever is being saved now, so flushQueue steps over these
+    // rather than racing them - see flushQueue for what goes wrong otherwise.
+    const inFlight = new Set();
+
     function setAutosaveStatus(text, cls) {
         autosaveStatus.textContent = text;
         autosaveStatus.className = 'small mt-1 ' + cls;
@@ -154,6 +159,7 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
 
         setAutosaveStatus('Saving...', 'text-muted');
         updateConnectionIndicator('retrying');
+        inFlight.add(questionId);
 
         return postAnswerWithRetry(payload)
             .then(() => {
@@ -180,16 +186,28 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
                     setAutosaveStatus('Save failed - queued, will retry automatically', 'text-danger');
                 }
                 updateConnectionIndicator('offline');
+            })
+            .finally(() => {
+                // Only the newest attempt for this question clears the flag; an
+                // older one finishing late must not open the door for a flush.
+                if (questionAttemptSeq[questionId] === myQSeq) {
+                    inFlight.delete(questionId);
+                }
             });
     }
 
     // Retries whatever is sitting in the queue - called on reconnect, on a
     // periodic timer, and on page load (a reload can leave a queue behind).
     function flushQueue() {
-        const queue = readQueue();
+        // Skipping questions mid-save is the point: re-sending the queued value
+        // alongside a newer one lets the stale request land last and win on the
+        // server, and the answer the student actually chose is then neither
+        // saved nor left in the queue. If that live save fails it re-queues
+        // itself, so nothing is dropped by waiting.
+        const queue = readQueue().filter(payload => !inFlight.has(payload.question_id));
 
         if (queue.length === 0) {
-            updateConnectionIndicator('ok');
+            updateConnectionIndicator();
 
             return Promise.resolve();
         }

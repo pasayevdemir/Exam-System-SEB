@@ -204,3 +204,44 @@ describe('the server clock', () => {
         expect(clock.report).toHaveBeenCalledWith(42);
     });
 });
+
+// A queued answer is by definition older than whatever the student has since
+// selected. Re-sending it while a newer save is still in flight lets the stale
+// value land last and win on the server - the change the student actually made
+// is then neither saved nor queued, and a timed exam is graded from the old
+// draft.
+describe('a queued answer racing a newer save', () => {
+    it('is not re-sent while a save for the same question is in flight', async () => {
+        sessionStorage.setItem(QUEUE_KEY, JSON.stringify([
+            { question_id: '1', answer_indexes: ['0'] },
+        ]));
+
+        const sent = [];
+        let releaseInFlight;
+        vi.stubGlobal('fetch', vi.fn((url, options) => {
+            sent.push(JSON.parse(options.body));
+
+            return new Promise(resolve => {
+                releaseInFlight = () => resolve({
+                    ok: true,
+                    status: 200,
+                    json: () => Promise.resolve({ remaining_seconds: 300 }),
+                });
+            });
+        }));
+
+        const autosave = makeAutosave();
+
+        dom.check(1, 2);
+        const saving = autosave.autosaveAnswer('1');
+
+        await autosave.flushQueue();
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0].answer_indexes).toEqual(['2']);
+
+        releaseInFlight();
+        await saving;
+        expect(queue()).toHaveLength(0);
+    });
+});

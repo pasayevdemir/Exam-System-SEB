@@ -148,6 +148,7 @@ CI runs these on every push and pull request; run them locally before pushing:
 ./vendor/bin/pint --test                    # formatting (use --dirty to fix only your changes)
 ./vendor/bin/phpstan analyse                # static analysis, level 5
 php artisan test                            # feature suite
+npm run test:js                             # exam page client logic (Vitest)
 npm run build                               # asset build
 ```
 
