@@ -28,11 +28,12 @@ class QuestionImportController extends Controller
     /**
      * The bulk-import page for one bank.
      *
-     * Deliberately not sharing a layer with storeQuestion above: that method
-     * takes a wide flat form payload, branches into a file_upload arm, filters
-     * blank answers and re-maps correct_answers against the filtered array —
-     * none of which an import has or wants. A common abstraction over the two
-     * shapes would be more branches than the handful of lines it saves.
+     * Deliberately not sharing a layer with BankQuestionController::storeQuestion:
+     * that action takes a wide flat form payload, branches into a file_upload
+     * arm, and leans on QuestionRequest to drop blank option boxes and re-map
+     * correct_answers against them — none of which an import has or wants. A
+     * common abstraction over the two shapes would be more branches than the
+     * handful of lines it saves.
      */
     public function importQuestions($bankId)
     {

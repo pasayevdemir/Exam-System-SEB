@@ -160,7 +160,7 @@ class ExamController extends Controller
                 $exam->delete();
             });
         } catch (QueryException $e) {
-            // Same race as deleteBank: the attempt/result guards are read before
+            // Same race as QuestionBankController::deleteBank: the attempt/result guards are read before
             // the transaction, so a student starting in between hits the RESTRICT
             // foreign key on exam_attempts.exam_id.
             return redirect()->route('admin.dashboard')->with(

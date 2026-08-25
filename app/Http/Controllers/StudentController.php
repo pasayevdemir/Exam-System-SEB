@@ -305,7 +305,7 @@ class StudentController extends Controller
             'ok' => true,
             'token' => csrf_token(),
             'remaining_seconds' => $attempt?->remainingSeconds(),
-            // Defence in depth rather than an expected state: toggleExamStatus
+            // Defence in depth rather than an expected state: ExamController::toggleExamStatus
             // refuses to deactivate an exam anyone is sitting, so this only goes
             // false if that guard is bypassed (direct SQL, a future code path).
             // The page shows a banner and keeps accepting answers - a student's

@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function dashboard()
     {
         // sitting_count drives the Deactivate button's disabled state, so it has
-        // to be counted the same way toggleExamStatus refuses: inProgress(), not
+        // to be counted the same way ExamController::toggleExamStatus refuses: inProgress(), not
         // a plain attempt count.
         $exams = Exam::with('examQuestionBanks')
             ->withCount(['attempts as sitting_count' => fn ($q) => $q->inProgress()])
