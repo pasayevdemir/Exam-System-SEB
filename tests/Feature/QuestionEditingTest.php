@@ -188,3 +188,20 @@ it('refuses an edit that leaves a single choice question with two correct answer
 
     expect($answers->where('is_correct', true))->toHaveCount(1);
 });
+
+// Same empty() trap as on the create side, and worse here: editing a question
+// to have a zero option dropped it and moved the correct mark to its neighbour.
+it('keeps an edited option whose text is just a zero', function () {
+    $seed = seedQuestion(['A', 'B', 'C']);
+
+    editQuestion($seed['question'], [
+        'answers' => ['0', 'B', 'C'],
+        'correct_answers' => [0],
+    ])->assertSessionHasNoErrors();
+
+    $answers = $seed['question']->answers()->orderBy('id')->get();
+
+    expect($answers)->toHaveCount(3)
+        ->and($answers[0]->answer_text)->toBe('0')
+        ->and($answers[0]->is_correct)->toBeTrue();
+});

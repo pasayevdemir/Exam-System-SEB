@@ -11,10 +11,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Admin\QuestionRequest;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\QuestionBank;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -30,78 +30,8 @@ class BankQuestionController extends Controller
         return view('admin.bank-questions', compact('bank', 'questions'));
     }
 
-    public function storeQuestion(Request $request, $bankId)
+    public function storeQuestion(QuestionRequest $request, $bankId)
     {
-        // Base validation rules
-        $rules = [
-            'question_text' => 'required|string',
-            'question_type' => 'required|in:single,multiple,file_upload',
-            'difficulty' => 'required|in:easy,medium,hard',
-        ];
-
-        // Add type-specific validation rules
-        if ($request->question_type === 'file_upload') {
-            $rules += [
-                'file_upload_settings.allowed_extensions' => 'nullable|array',
-                'file_upload_settings.allowed_extensions.*' => 'string|in:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,txt',
-                'file_upload_settings.max_size_mb' => 'nullable|integer|min:1|max:100',
-            ];
-        } else {
-            $rules += [
-                'answers' => 'required|array|min:2',
-                'answers.*' => 'required|string',
-                'correct_answers' => 'required|array|min:1',
-                'correct_answers.*' => 'required|integer',
-            ];
-
-            // A single-choice question with two correct answers is unscoreable.
-            // Only the create form's JS enforced this before, so anything that
-            // did not come through that form could store one.
-            if ($request->question_type === 'single') {
-                $rules['correct_answers'] = 'required|array|size:1';
-            }
-        }
-
-        // Filter out empty answers before validation
-        if ($request->has('answers')) {
-            // Captured BEFORE the merge below: correct_answers holds positions in
-            // the form's array, so remapping them needs the array as submitted.
-            // Reading it back after the merge compares form positions against the
-            // already-filtered list and silently marks the wrong option correct.
-            $originalAnswers = $request->input('answers');
-
-            $filteredAnswers = array_filter($request->answers, function ($answer) {
-                return ! empty(trim($answer));
-            });
-            $filteredAnswers = array_values($filteredAnswers); // Re-index array
-            $request->merge(['answers' => $filteredAnswers]);
-
-            // Adjust correct_answers indices to match filtered answers
-            if ($request->has('correct_answers')) {
-                $correctAnswersAdjusted = [];
-
-                foreach ($request->correct_answers as $originalIndex) {
-                    // Find the new index in filtered array
-                    $newIndex = 0;
-                    $currentIndex = 0;
-
-                    foreach ($originalAnswers as $idx => $answer) {
-                        if (! empty(trim($answer))) {
-                            if ($idx == $originalIndex) {
-                                $correctAnswersAdjusted[] = $newIndex;
-                                break;
-                            }
-                            $newIndex++;
-                        }
-                    }
-                }
-
-                $request->merge(['correct_answers' => $correctAnswersAdjusted]);
-            }
-        }
-
-        $request->validate($rules);
-
         $bank = QuestionBank::findOrFail($bankId);
 
         // Prepare question data
@@ -128,13 +58,11 @@ class BankQuestionController extends Controller
             // Create answers only for MCQ questions
             if (in_array($request->question_type, ['single', 'multiple'])) {
                 foreach ($request->answers as $index => $answerText) {
-                    if (! empty(trim($answerText))) {
-                        Answer::create([
-                            'question_id' => $question->id,
-                            'answer_text' => $answerText,
-                            'is_correct' => in_array($index, $request->correct_answers),
-                        ]);
-                    }
+                    Answer::create([
+                        'question_id' => $question->id,
+                        'answer_text' => $answerText,
+                        'is_correct' => in_array($index, $request->correct_answers),
+                    ]);
                 }
             }
         });
@@ -149,78 +77,8 @@ class BankQuestionController extends Controller
         return view('admin.edit-question', compact('question'));
     }
 
-    public function updateQuestion(Request $request, $questionId)
+    public function updateQuestion(QuestionRequest $request, $questionId)
     {
-        // Base validation rules
-        $rules = [
-            'question_text' => 'required|string',
-            'question_type' => 'required|in:single,multiple,file_upload',
-            'difficulty' => 'required|in:easy,medium,hard',
-        ];
-
-        // Add type-specific validation rules
-        if ($request->question_type === 'file_upload') {
-            $rules += [
-                'file_upload_settings.allowed_extensions' => 'nullable|array',
-                'file_upload_settings.allowed_extensions.*' => 'string|in:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,txt',
-                'file_upload_settings.max_size_mb' => 'nullable|integer|min:1|max:100',
-            ];
-        } else {
-            $rules += [
-                'answers' => 'required|array|min:2',
-                'answers.*' => 'nullable|string',
-                'correct_answers' => 'required|array|min:1',
-                'correct_answers.*' => 'required|integer',
-            ];
-
-            // Same rule as storeQuestion: editing must not be a way to reach the
-            // unscoreable "single choice with two correct answers" state that
-            // creating one already refuses.
-            if ($request->question_type === 'single') {
-                $rules['correct_answers'] = 'required|array|size:1';
-            }
-        }
-
-        // Filter out empty answers before validation (same logic as storeQuestion)
-        if ($request->has('answers')) {
-            // Captured BEFORE the merge below: correct_answers holds positions in
-            // the form's array, so remapping them needs the array as submitted.
-            // Reading it back after the merge compares form positions against the
-            // already-filtered list and silently marks the wrong option correct.
-            $originalAnswers = $request->input('answers');
-
-            $filteredAnswers = array_filter($request->answers, function ($answer) {
-                return ! empty(trim($answer));
-            });
-            $filteredAnswers = array_values($filteredAnswers); // Re-index array
-            $request->merge(['answers' => $filteredAnswers]);
-
-            // Adjust correct_answers indices to match filtered answers
-            if ($request->has('correct_answers')) {
-                $correctAnswersAdjusted = [];
-
-                foreach ($request->correct_answers as $originalIndex) {
-                    // Find the new index in filtered array
-                    $newIndex = 0;
-                    $currentIndex = 0;
-
-                    foreach ($originalAnswers as $idx => $answer) {
-                        if (! empty(trim($answer))) {
-                            if ($idx == $originalIndex) {
-                                $correctAnswersAdjusted[] = $newIndex;
-                                break;
-                            }
-                            $newIndex++;
-                        }
-                    }
-                }
-
-                $request->merge(['correct_answers' => $correctAnswersAdjusted]);
-            }
-        }
-
-        $request->validate($rules);
-
         $question = Question::with(['answers', 'questionBank'])->findOrFail($questionId);
 
         // Prepare update data
@@ -254,10 +112,7 @@ class BankQuestionController extends Controller
             // any in-progress attempt's pinned answer_display_order would be left
             // pointing at ids that no longer exist.
             $existing = $question->answers()->orderBy('id')->get()->values();
-            $submitted = array_values(array_filter(
-                $request->answers,
-                fn ($answerText) => trim((string) $answerText) !== ''
-            ));
+            $submitted = $request->answers;
 
             foreach ($submitted as $index => $answerText) {
                 $isCorrect = in_array($index, $request->correct_answers);

@@ -94,3 +94,38 @@ it('keeps question creation behind admin auth', function () {
     test()->post(route('admin.store-question', $bank->id), [])
         ->assertRedirect(route('admin.login'));
 });
+
+// "0" is a perfectly good answer option - the right one on any question asking
+// for a count or a remainder. The blank-option filter used empty(), for which
+// the string "0" is empty, so the option vanished and the correct-answer
+// position slid onto whichever option followed it.
+it('keeps an option whose text is just a zero', function () {
+    $bank = QuestionBank::factory()->create();
+
+    addQuestion($bank, [
+        'question_text' => 'How many roots does x^2 + 1 have over the reals?',
+        'answers' => ['0', '1', '2'],
+        'correct_answers' => [0],
+    ])->assertSessionHas('success');
+
+    $question = Question::firstWhere('question_bank_id', $bank->id);
+
+    expect($question->answers)->toHaveCount(3)
+        ->and($question->answers->firstWhere('answer_text', '0')->is_correct)->toBeTrue()
+        ->and($question->answers->where('is_correct', true))->toHaveCount(1);
+});
+
+// The filter ran before validation and assumed the shape validation had not
+// checked yet, so anything but an array of strings reached array_filter/trim as
+// the wrong type and came back a 500 instead of a rejected form.
+it('rejects a malformed answers payload instead of failing on it', function () {
+    $bank = QuestionBank::factory()->create();
+
+    addQuestion($bank, ['answers' => 'not-an-array'])
+        ->assertSessionHasErrors('answers');
+
+    addQuestion($bank, ['answers' => [['nested'], ['nested']]])
+        ->assertSessionHasErrors('answers');
+
+    expect(Question::where('question_bank_id', $bank->id)->count())->toBe(0);
+});
