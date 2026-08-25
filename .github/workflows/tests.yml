@@ -37,7 +37,12 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          # Must match docker/Dockerfile.prod (php:8.3-fpm). Testing on anything
+          # else tests a runtime the application never runs on — and composer.lock
+          # cannot even be installed on 8.2: phpspreadsheet pulls in
+          # maennchen/zipstream-php, and the whole test toolchain (Pest 4,
+          # PHPUnit 12, Pint) requires 8.3 as well.
+          php-version: '8.3'
           extensions: mbstring, xml, ctype, iconv, intl, bcmath, zip, gd, pdo_sqlite, sqlite3
           coverage: none
 
