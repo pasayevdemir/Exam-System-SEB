@@ -293,3 +293,50 @@ describe('the download endpoint', function () {
             ->assertRedirect(route('admin.login'));
     });
 });
+
+// exam_id is free text an admin types, and "2024/Fall" is an ordinary thing to
+// call an exam. Symfony refuses a Content-Disposition filename containing a
+// path separator, so it reached the browser as a 500 rather than a download.
+it('survives an exam id that is not filename-safe', function () {
+    $exam = Exam::factory()->create(['exam_id' => '2024/Fall']);
+    ExamResult::create([
+        'exam_id' => $exam->id,
+        'user_id' => User::factory()->create()->id,
+        'total_questions' => 1,
+        'correct_answers' => 1,
+        'score' => 1,
+        'submitted_at' => now(),
+    ]);
+
+    $response = test()->withSession(['admin_logged_in' => true])
+        ->get(route('admin.download-results', $exam->id));
+
+    $response->assertOk();
+
+    expect($response->headers->get('content-disposition'))->toContain('2024-Fall');
+});
+
+// One multiple-choice question answered with two options is two rows on this
+// sheet. Numbering them by row made the second option look like question 2, and
+// pushed every question after it off by one.
+it('numbers the rows by question rather than by row', function () {
+    $seed = seedSubmission();
+    $first = answerMcq($seed, chosen: 0);
+
+    // A second option chosen on that same question.
+    StudentAnswer::create([
+        'exam_result_id' => $seed['result']->id,
+        'question_id' => $first->question_id,
+        'answer_id' => Answer::where('question_id', $first->question_id)->orderByDesc('id')->value('id'),
+    ]);
+
+    answerMcq($seed, chosen: 0);
+
+    $sheet = buildWorkbook($seed['exam'])->getSheet(1);
+
+    expect([
+        $sheet->getCell('C2')->getValue(),
+        $sheet->getCell('C3')->getValue(),
+        $sheet->getCell('C4')->getValue(),
+    ])->toBe([1, 1, 2]);
+});

@@ -83,9 +83,16 @@ class ExamResultsWorkbook
         private readonly Collection $results,
     ) {}
 
+    /**
+     * exam_id is free text an admin types, and "2024/Fall" is an ordinary thing
+     * to call an exam - but a Content-Disposition filename may not carry a path
+     * separator, so anything outside a safe set becomes a dash here.
+     */
     public function filename(): string
     {
-        return 'exam_results_'.$this->exam->exam_id.'_'.now()->format('Y-m-d_H-i-s').'.xlsx';
+        $examId = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $this->exam->exam_id);
+
+        return 'exam_results_'.trim((string) $examId, '-').'_'.now()->format('Y-m-d_H-i-s').'.xlsx';
     }
 
     public function build(): Spreadsheet
@@ -169,14 +176,20 @@ class ExamResultsWorkbook
         $row = 1;
 
         foreach ($this->results as $result) {
-            foreach ($result->studentAnswers as $index => $studentAnswer) {
+            // One multiple-choice question answered with two options is two rows
+            // here, so numbering by row made the second option read as the next
+            // question and pushed every question after it off by one.
+            $numbers = [];
+
+            foreach ($result->studentAnswers as $studentAnswer) {
                 $row++;
                 $question = $studentAnswer->question;
                 $isFileUpload = $question->isFileUpload();
+                $numbers[$question->id] ??= count($numbers) + 1;
 
                 $this->text($sheet, 'A'.$row, $result->user?->name ?? 'N/A');
                 $this->text($sheet, 'B'.$row, $result->user?->fin_code ?? 'N/A');
-                $sheet->setCellValue('C'.$row, $index + 1);
+                $sheet->setCellValue('C'.$row, $numbers[$question->id]);
                 $this->text($sheet, 'D'.$row, $question->question_text);
                 $this->text($sheet, 'E'.$row, $isFileUpload ? 'File Upload' : 'Multiple Choice');
 
