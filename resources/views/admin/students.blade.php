@@ -72,14 +72,14 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
                                     <form action="{{ route('admin.approve-reset-request', $resetRequest->id) }}" method="POST"
-                                          onsubmit="return confirm('Issue a generated password for this student? Their current password stops working immediately.');">
+                                          data-confirm="Issue a generated password for this student? Their current password stops working immediately.">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success">
                                             <i class="fas fa-check me-1"></i>Generate password
                                         </button>
                                     </form>
                                     <form action="{{ route('admin.set-student-password', $resetRequest->user_id) }}" method="POST"
-                                          onsubmit="return confirm('Set this student\'s password to their FIN code ({{ $resetRequest->user->fin_code }})?');">
+                                          data-confirm="Set this student's password to their FIN code ({{ $resetRequest->user->fin_code }})?">
                                         @csrf
                                         <input type="hidden" name="mode" value="fin">
                                         <button type="submit" class="btn btn-sm btn-outline-primary">
@@ -132,7 +132,7 @@
                                         <i class="fas fa-edit me-1"></i>Edit
                                     </a>
                                     <form action="{{ route('admin.delete-student', $student->id) }}" method="POST"
-                                          onsubmit="return confirm('Delete this student? This cannot be undone.');">
+                                          data-confirm="Delete this student? This cannot be undone.">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Middleware\EnsureSafeExamBrowser;
 use App\Http\Middleware\StudentMiddleware;
 use Illuminate\Foundation\Application;
@@ -22,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'student' => StudentMiddleware::class,
             'seb' => EnsureSafeExamBrowser::class,
         ]);
+
+        // Every response, so a page that forgets to declare itself is still
+        // covered. The policy itself is in the middleware.
+        $middleware->web(append: [ContentSecurityPolicy::class]);
 
         // Behind Cloudflare + the host nginx reverse-proxy, so the app must trust
         // X-Forwarded-* to know the original request was HTTPS (otherwise every

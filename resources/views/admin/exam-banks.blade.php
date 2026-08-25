@@ -92,7 +92,7 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('admin.detach-bank', [$exam->id, $eqb->id]) }}" method="POST"
-                                              onsubmit="return confirm('Detach this bank from the exam?');">
+                                              data-confirm="Detach this bank from the exam?">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">

@@ -141,7 +141,7 @@
                 </form>
 
                 <form action="{{ route('admin.set-student-password', $student->id) }}" method="POST"
-                      onsubmit="return confirm('Set this student\'s password to their FIN code ({{ $student->fin_code }})?');">
+                      data-confirm="Set this student's password to their FIN code ({{ $student->fin_code }})?">
                     @csrf
                     <input type="hidden" name="mode" value="fin">
                     <button type="submit" class="btn btn-outline-secondary">

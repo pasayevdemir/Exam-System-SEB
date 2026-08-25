@@ -7,6 +7,7 @@ import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
 
 import { renderMath } from './math.js';
+import { initConfirmSubmit } from './shared/confirm-submit.js';
 import { initPasswordConfirmModals } from './shared/password-confirm.js';
 
 /**
@@ -45,9 +46,10 @@ function announceScriptFailure() {
 document.addEventListener('DOMContentLoaded', () => {
     renderMath();
 
-    // Not a page module: the confirm dialog is included by whichever pages have
-    // something to delete, and finds nothing to wire up on the rest.
+    // Not page modules: both wire up markup that appears on whichever pages
+    // happen to carry it, and find nothing to do on the rest.
     initPasswordConfirmModals();
+    initConfirmSubmit();
 
     const page = document.body.dataset.page;
 
