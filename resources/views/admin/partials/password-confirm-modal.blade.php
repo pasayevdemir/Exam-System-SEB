@@ -8,7 +8,7 @@
 
     Required: $id, $title, $heading, $warnings (array of strings), $buttonLabel
 --}}
-<div class="modal fade" id="{{ $id }}" tabindex="-1" aria-labelledby="{{ $id }}Label" aria-hidden="true">
+<div class="modal fade" data-password-confirm id="{{ $id }}" tabindex="-1" aria-labelledby="{{ $id }}Label" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form method="POST" id="{{ $id }}Form">
@@ -50,27 +50,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    (function () {
-        const modalEl = document.getElementById(@json($id));
-        if (!modalEl) return;
-
-        const form = document.getElementById(@json($id . 'Form'));
-        const item = document.getElementById(@json($id . 'Item'));
-        const password = document.getElementById(@json($id . 'Password'));
-
-        modalEl.addEventListener('show.bs.modal', function (event) {
-            const trigger = event.relatedTarget;
-            if (!trigger) return;
-
-            form.action = trigger.dataset.action || '';
-            item.textContent = trigger.dataset.item || '';
-            password.value = ''; // never carry a typed password between rows
-        });
-
-        modalEl.addEventListener('shown.bs.modal', function () {
-            password.focus();
-        });
-    })();
-</script>

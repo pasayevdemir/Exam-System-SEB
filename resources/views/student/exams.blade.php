@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'student-exams')
+
 @section('title', 'Available Exams')
 
 @section('nav-items')
@@ -19,7 +21,8 @@
             // the page is already showing and answer "nothing changed".
             $examListHtml = view('student.partials.exam-list', compact('activeExams', 'openAttempt'))->render();
         @endphp
-        <div id="examListLive" data-v="{{ sha1($examListHtml) }}">{!! $examListHtml !!}</div>
+        <div id="examListLive" data-url="{{ route('student.exams-state') }}"
+             data-v="{{ sha1($examListHtml) }}">{!! $examListHtml !!}</div>
     </div>
 </div>
 
@@ -58,63 +61,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modalEl = document.getElementById('startExamModal');
-    const listEl = document.getElementById('examListLive');
-
-    // Whether a swap has to wait. Declared up front so the poll can consult it
-    // even if the modal is somehow absent and its wiring is skipped.
-    let modalOpen = false;
-    let poll = null;
-
-    if (modalEl) {
-        const nameEl = document.getElementById('startExamModalExamName');
-        const timeLimitEl = document.getElementById('startExamModalTimeLimit');
-        const confirmBtn = document.getElementById('startExamModalConfirm');
-
-        modalEl.addEventListener('show.bs.modal', function (event) {
-            modalOpen = true;
-
-            const button = event.relatedTarget;
-            nameEl.textContent = button.dataset.name;
-            confirmBtn.dataset.url = button.dataset.url;
-
-            const timeLimit = button.dataset.timeLimit;
-            if (timeLimit) {
-                timeLimitEl.textContent = `Vaxt limiti: ${timeLimit} dəqiqədir. Vaxt bitdikdə imtahan avtomatik təqdim olunacaq.`;
-                timeLimitEl.classList.remove('d-none');
-            } else {
-                timeLimitEl.classList.add('d-none');
-            }
-        });
-
-        modalEl.addEventListener('hidden.bs.modal', function () {
-            modalOpen = false;
-            // Only now is it safe to replace the cards: doing it while the modal
-            // was up would have detached the button it was opened from.
-            if (poll) poll.applyPending();
-        });
-
-        confirmBtn.addEventListener('click', function () {
-            // Starting is one-shot: a double click would fire two generate requests.
-            confirmBtn.disabled = true;
-            window.location.href = confirmBtn.dataset.url;
-        });
-    }
-
-    // Keep the list in step with the admin side without a reload: activating an
-    // exam, renaming it, changing its banks or allowing a retake all show up
-    // here on their own.
-    if (listEl && typeof window.psLivePoll === 'function') {
-        poll = window.psLivePoll({
-            url: @json(route('student.exams-state')),
-            version: listEl.dataset.v,
-            target: listEl,
-            canSwap: () => !modalOpen,
-        });
-    }
-});
-</script>
-@endsection

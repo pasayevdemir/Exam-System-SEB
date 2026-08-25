@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'edit-question')
+
 @section('title', 'Edit Question - ' . $question->questionBank->name)
 
 @section('nav-items')
@@ -163,62 +165,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const singleRadio = document.getElementById('single');
-    const multipleRadio = document.getElementById('multiple');
-    const fileUploadRadio = document.getElementById('file_upload');
-    const correctAnswers = document.querySelectorAll('.correct-answer');
-    const mcqAnswersContainer = document.getElementById('mcqAnswersContainer');
-    const fileUploadSettings = document.getElementById('fileUploadSettings');
-
-    function updateQuestionTypeDisplay() {
-        if (fileUploadRadio.checked) {
-            // File upload question: hide MCQ options, show file settings
-            mcqAnswersContainer.style.display = 'none';
-            fileUploadSettings.style.display = 'block';
-            
-            // Remove required attributes from MCQ fields
-            document.querySelectorAll('#answersContainer input').forEach(input => {
-                input.removeAttribute('required');
-            });
-        } else {
-            // MCQ question: show MCQ options, hide file settings
-            mcqAnswersContainer.style.display = 'block';
-            fileUploadSettings.style.display = 'none';
-            
-            // Add required attributes back to MCQ fields
-            document.querySelectorAll('#answersContainer input').forEach(input => {
-                input.setAttribute('required', 'required');
-            });
-            
-            updateCheckboxBehavior();
-        }
-    }
-
-    function updateCheckboxBehavior() {
-        if (singleRadio.checked) {
-            // Single choice: only one checkbox can be selected
-            correctAnswers.forEach(checkbox => {
-                checkbox.type = 'radio';
-                checkbox.name = 'correct_answers[]';
-            });
-        } else if (multipleRadio.checked) {
-            // Multiple choice: multiple checkboxes can be selected
-            correctAnswers.forEach(checkbox => {
-                checkbox.type = 'checkbox';
-                checkbox.name = 'correct_answers[]';
-            });
-        }
-    }
-
-    singleRadio.addEventListener('change', updateQuestionTypeDisplay);
-    multipleRadio.addEventListener('change', updateQuestionTypeDisplay);
-    fileUploadRadio.addEventListener('change', updateQuestionTypeDisplay);
-    
-    // Initialize on page load
-    updateQuestionTypeDisplay();
-});
-</script>
-@endsection

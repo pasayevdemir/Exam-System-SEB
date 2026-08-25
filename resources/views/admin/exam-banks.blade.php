@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'exam-banks')
+
 @section('title', 'Banks - ' . $exam->exam_name)
 
 @section('nav-items')
@@ -197,51 +199,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bankSelect = document.getElementById('question_bank_id');
-    if (!bankSelect) return;
-
-    const quotaInputs = {
-        easy: document.getElementById('quota_easy'),
-        medium: document.getElementById('quota_medium'),
-        hard: document.getElementById('quota_hard'),
-    };
-    const hints = {
-        easy: document.getElementById('easy-count-hint'),
-        medium: document.getElementById('medium-count-hint'),
-        hard: document.getElementById('hard-count-hint'),
-    };
-
-    function selectedCounts() {
-        const option = bankSelect.options[bankSelect.selectedIndex];
-        if (!option || !option.value) return null;
-        return {
-            easy: parseInt(option.dataset.easy || '0', 10),
-            medium: parseInt(option.dataset.medium || '0', 10),
-            hard: parseInt(option.dataset.hard || '0', 10),
-        };
-    }
-
-    function refresh() {
-        const counts = selectedCounts();
-
-        ['easy', 'medium', 'hard'].forEach(function (level) {
-            hints[level].textContent = counts ? `(${counts[level]} available)` : '';
-
-            const input = quotaInputs[level];
-            const value = parseInt(input.value || '0', 10);
-            const exceeds = counts !== null && value > counts[level];
-            input.classList.toggle('is-invalid', exceeds);
-            input.classList.toggle('border-danger', exceeds);
-        });
-    }
-
-    bankSelect.addEventListener('change', refresh);
-    Object.values(quotaInputs).forEach(function (input) {
-        input.addEventListener('input', refresh);
-    });
-});
-</script>
-@endsection

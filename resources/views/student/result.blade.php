@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'student-result')
+
 @section('title', 'Exam Result')
 
 @section('nav-items')
@@ -101,45 +103,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-    (function () {
-        var seconds = 20;
-        var countdownEl = document.getElementById('countdown');
-        var logoutForm = document.getElementById('logout-form');
-        var logoutBtn = document.getElementById('logout-btn');
-        var continueLink = document.getElementById('take-another-exam-link');
-        var redirecting = false;
-        var timer = null;
-
-        function doLogout() {
-            if (redirecting) {
-                return;
-            }
-            redirecting = true;
-            clearInterval(timer);
-            logoutBtn.disabled = true;
-            continueLink.classList.add('disabled');
-            continueLink.setAttribute('aria-disabled', 'true');
-            logoutForm.submit();
-        }
-
-        timer = setInterval(function () {
-            seconds -= 1;
-            countdownEl.textContent = Math.max(seconds, 0);
-
-            if (seconds <= 0) {
-                doLogout();
-            }
-        }, 1000);
-
-        function cancelCountdown() {
-            redirecting = true;
-            clearInterval(timer);
-        }
-
-        logoutBtn.addEventListener('click', cancelCountdown);
-        continueLink.addEventListener('click', cancelCountdown);
-    })();
-</script>
-@endsection

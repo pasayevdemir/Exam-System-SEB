@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'exam-results')
+
 @section('title', 'Exam Results - ' . $exam->exam_name)
 
 @section('nav-items')
@@ -296,24 +298,3 @@
 @endif
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchForm = document.getElementById('searchForm');
-    const searchInput = document.getElementById('search');
-    
-    // Allow Enter key to submit form from search field
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchForm.submit();
-        }
-    });
-    
-    // Auto-focus on search field if empty
-    if (!searchInput.value) {
-        searchInput.focus();
-    }
-});
-</script>
-@endsection

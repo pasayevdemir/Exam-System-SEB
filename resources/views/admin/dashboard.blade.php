@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'dashboard')
+
 @section('title', 'Admin Dashboard')
 
 @section('nav-items')
@@ -153,36 +155,3 @@
 ])
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.copy-password').forEach(function (badge) {
-        badge.addEventListener('click', function () {
-            const icon = badge.querySelector('i');
-            const restore = function () {
-                badge.classList.remove('bg-success', 'text-white');
-                badge.classList.add('bg-light', 'text-dark');
-                icon.classList.remove('fa-check');
-                icon.classList.add('fa-copy');
-            };
-            const showSuccess = function () {
-                badge.classList.remove('bg-light', 'text-dark');
-                badge.classList.add('bg-success', 'text-white');
-                icon.classList.remove('fa-copy');
-                icon.classList.add('fa-check');
-                setTimeout(restore, 1200);
-            };
-
-            if (!navigator.clipboard) {
-                return;
-            }
-            navigator.clipboard.writeText(badge.dataset.password).then(showSuccess).catch(function () {
-                icon.classList.remove('fa-copy');
-                icon.classList.add('fa-times');
-                setTimeout(restore, 1200);
-            });
-        });
-    });
-});
-</script>
-@endsection

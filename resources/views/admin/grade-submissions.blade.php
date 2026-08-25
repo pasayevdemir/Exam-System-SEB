@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page', 'grade-submissions')
+
 @section('title', 'Grade File Submissions - ' . $exam->exam_name)
 
 @section('nav-items')
@@ -213,74 +215,3 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filePreviewModal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
-    const filePreviewContent = document.getElementById('filePreviewContent');
-    const downloadFileBtn = document.getElementById('downloadFileBtn');
-    const modalTitle = document.getElementById('filePreviewModalLabel');
-
-    // Handle file preview buttons
-    document.querySelectorAll('.view-file-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const fileUrl = this.dataset.fileUrl;
-            const fileName = this.dataset.fileName;
-            const fileExtension = fileName.split('.').pop().toLowerCase();
-            
-            modalTitle.innerHTML = '<i class="fas fa-file me-2"></i>' + fileName;
-            downloadFileBtn.href = fileUrl;
-            
-            // Clear previous content
-            filePreviewContent.innerHTML = '<p>Loading preview...</p>';
-            
-            // Show different previews based on file type
-            if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-                filePreviewContent.innerHTML = `
-                    <img src="${fileUrl}" class="img-fluid" alt="File preview" style="max-height: 500px;">
-                `;
-            } else if (fileExtension === 'pdf') {
-                filePreviewContent.innerHTML = `
-                    <embed src="${fileUrl}" type="application/pdf" width="100%" height="500px">
-                    <p class="mt-3 text-muted">If the PDF doesn't display, <a href="${fileUrl}" target="_blank">click here to open it</a>.</p>
-                `;
-            } else if (['txt'].includes(fileExtension)) {
-                fetch(fileUrl)
-                    .then(response => response.text())
-                    .then(text => {
-                        filePreviewContent.innerHTML = `
-                            <div class="text-start">
-                                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">${text}</pre>
-                            </div>
-                        `;
-                    })
-                    .catch(() => {
-                        filePreviewContent.innerHTML = `
-                            <p class="text-muted">Cannot preview this file type. Please download to view.</p>
-                        `;
-                    });
-            } else {
-                filePreviewContent.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Preview not available for this file type (${fileExtension.toUpperCase()}).</p>
-                        <p>Please download the file to view its contents.</p>
-                    </div>
-                `;
-            }
-            
-            filePreviewModal.show();
-        });
-    });
-
-    // Add smooth form submission animation
-    document.querySelectorAll('.grading-form').forEach(form => {
-        form.addEventListener('submit', function() {
-            const button = this.querySelector('button[type="submit"]');
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
-            button.disabled = true;
-        });
-    });
-});
-</script>
-@endsection

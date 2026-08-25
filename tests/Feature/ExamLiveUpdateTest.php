@@ -345,9 +345,14 @@ it('does not let the results state route be swallowed by the result-id route', f
  */
 function renderedVersion(string $html, string $containerId): string
 {
-    expect($html)->toMatch('/id="'.$containerId.'" data-v="[0-9a-f]{40}"/');
+    // Anything may sit between the id and the hash - the live-poll endpoint URL
+    // moved onto this element when the page script became a module - so the
+    // pattern reads to the end of the tag rather than to the next attribute.
+    $pattern = '/id="'.$containerId.'"[^>]*?data-v="([0-9a-f]{40})"/s';
 
-    preg_match('/id="'.$containerId.'" data-v="([0-9a-f]{40})"/', $html, $matches);
+    expect($html)->toMatch($pattern);
+
+    preg_match($pattern, $html, $matches);
 
     return $matches[1];
 }
