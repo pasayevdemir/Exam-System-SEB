@@ -728,9 +728,10 @@ class StudentController extends Controller
         $attempt = $examResult->examAttempt;
 
         // The attempt is SET NULL when an admin clears history, so a result can
-        // outlive it; duration is simply unavailable in that case.
+        // outlive it; duration is simply unavailable in that case. started_at is
+        // NOT NULL on the table, so only completed_at is worth checking.
         // Carbon 3 returns a float here, which would render as "30.41666 min".
-        $durationMinutes = ($attempt && $attempt->started_at && $attempt->completed_at)
+        $durationMinutes = ($attempt && $attempt->completed_at)
             ? (int) round($attempt->started_at->diffInMinutes($attempt->completed_at))
             : null;
 

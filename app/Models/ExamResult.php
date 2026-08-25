@@ -11,8 +11,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read Exam $exam
+ * @property-read User|null $user
+ * @property-read ExamAttempt|null $examAttempt
+ * @property-read Collection<int, StudentAnswer> $studentAnswers
+ */
 class ExamResult extends Model
 {
     protected $fillable = [
@@ -32,22 +41,34 @@ class ExamResult extends Model
         'score' => 'integer',
     ];
 
-    public function exam()
+    /**
+     * @return BelongsTo<Exam, $this>
+     */
+    public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
     }
 
-    public function user()
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function examAttempt()
+    /**
+     * @return BelongsTo<ExamAttempt, $this>
+     */
+    public function examAttempt(): BelongsTo
     {
         return $this->belongsTo(ExamAttempt::class);
     }
 
-    public function studentAnswers()
+    /**
+     * @return HasMany<StudentAnswer, $this>
+     */
+    public function studentAnswers(): HasMany
     {
         return $this->hasMany(StudentAnswer::class);
     }

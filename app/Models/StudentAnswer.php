@@ -12,7 +12,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read ExamResult $examResult
+ * @property-read Question $question
+ * @property-read Answer|null $answer  null on a file upload, and on an
+ *                                     unanswered question
+ */
 class StudentAnswer extends Model
 {
     protected $fillable = [
@@ -34,17 +41,26 @@ class StudentAnswer extends Model
         'file_size' => 'integer',
     ];
 
-    public function examResult()
+    /**
+     * @return BelongsTo<ExamResult, $this>
+     */
+    public function examResult(): BelongsTo
     {
         return $this->belongsTo(ExamResult::class);
     }
 
-    public function question()
+    /**
+     * @return BelongsTo<Question, $this>
+     */
+    public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);
     }
 
-    public function answer()
+    /**
+     * @return BelongsTo<Answer, $this>
+     */
+    public function answer(): BelongsTo
     {
         return $this->belongsTo(Answer::class);
     }

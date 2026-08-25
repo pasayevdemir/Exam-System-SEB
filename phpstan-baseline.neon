@@ -7,10 +7,16 @@ parameters:
 			path: app/Console/Commands/SebVerify.php
 
 		-
-			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
-			identifier: larastan.relationExistence
+			message: '#^Using nullsafe property access "\?\-\>fin_code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/BankQuestionController.php
+			path: app/Exports/ExamResultsWorkbook.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Exports/ExamResultsWorkbook.php
 
 		-
 			message: '#^Relation ''questionBank'' is not found in App\\Models\\Question model\.$#'
@@ -79,48 +85,6 @@ parameters:
 			path: app/Http/Controllers/ExamController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Call to static method error\(\) on an unknown class Log\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Relation ''user'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 3
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>fin_code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/ExamResultController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\QuestionBank\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\QuestionBank\>\:\:\$questions_count\.$#'
 			identifier: property.notFound
 			count: 1
@@ -139,12 +103,6 @@ parameters:
 			path: app/Http/Controllers/StudentAdminController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/StudentAdminController.php
-
-		-
 			message: '#^Relation ''user'' is not found in App\\Models\\PasswordResetRequest model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -154,18 +112,6 @@ parameters:
 			message: '#^Access to an undefined property App\\Models\\ExamAttempt\:\:\$exam\.$#'
 			identifier: property.notFound
 			count: 3
-			path: app/Http/Controllers/StudentController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$exam\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/StudentController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$examAttempt\.$#'
-			identifier: property.notFound
-			count: 1
 			path: app/Http/Controllers/StudentController.php
 
 		-
@@ -193,70 +139,16 @@ parameters:
 			path: app/Http/Controllers/StudentController.php
 
 		-
-			message: '#^Relation ''exam'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/StudentController.php
-
-		-
 			message: '#^Relation ''examQuestionBanks'' is not found in App\\Models\\Exam model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Http/Controllers/StudentController.php
 
 		-
-			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/StudentController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$examResult\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\StudentAnswer\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\StudentAnswer\>\:\:\$question\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
 			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Relation ''examResult'' is not found in App\\Models\\StudentAnswer model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Relation ''studentAnswers'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 2
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Relation ''user'' is not found in App\\Models\\ExamResult model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/SubmissionGradingController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/ExamResult.php
 
 		-
 			message: '#^Offset ''easy''\|''hard''\|''medium'' on array\{easy\: 1\.0, medium\: 1\.5, hard\: 2\.0\} on left side of \?\? always exists and is not nullable\.$#'
@@ -343,12 +235,6 @@ parameters:
 			path: tests/Feature/ExamCompletionRedirectTest.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
-			count: 1
-			path: tests/Feature/ExamExpiryTest.php
-
-		-
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
 			identifier: method.notFound
 			count: 4
@@ -391,10 +277,16 @@ parameters:
 			path: tests/Feature/ExamQuestionMapTest.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\ExamResult\:\:\$studentAnswers\.$#'
-			identifier: property.notFound
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/ExamResultsWorkbookTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
+			identifier: method.notFound
 			count: 2
-			path: tests/Feature/ExamScoringTest.php
+			path: tests/Feature/ExamResultsWorkbookTest.php
 
 		-
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:actingAs\(\)\.$#'
@@ -478,12 +370,6 @@ parameters:
 			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:withSession\(\)\.$#'
 			identifier: method.notFound
 			count: 7
-			path: tests/Feature/QuestionImportTest.php
-
-		-
-			message: '#^Relation ''answers'' is not found in App\\Models\\Question model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
 			path: tests/Feature/QuestionImportTest.php
 
 		-

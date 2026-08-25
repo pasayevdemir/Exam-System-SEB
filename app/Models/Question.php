@@ -14,6 +14,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read Collection<int, Answer> $answers
@@ -46,7 +47,10 @@ class Question extends Model
         return $this->belongsTo(QuestionBank::class);
     }
 
-    public function answers()
+    /**
+     * @return HasMany<Answer, $this>
+     */
+    public function answers(): HasMany
     {
         return $this->hasMany(Answer::class);
     }
