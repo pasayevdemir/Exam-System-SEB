@@ -103,7 +103,13 @@
                     </thead>
                     <tbody>
                         @foreach($results as $result)
-                            @php $violationCount = $result->examAttempt?->events->count() ?? 0; @endphp
+                            @php
+                                $violationCount = $result->examAttempt?->events->count() ?? 0;
+                                // Weighted now, so "out of" is the paper's summed weight
+                                // rather than its question count.
+                                $scoreLabel = \App\Models\ExamResult::formatPoints($result->score)
+                                    .' / '.\App\Models\ExamResult::formatPoints($result->maxScore());
+                            @endphp
                             <tr>
                                 <td>{{ $result->user?->name ?? 'N/A' }}</td>
                                 <td>{{ $result->user?->fin_code ?? 'N/A' }}</td>
@@ -114,7 +120,7 @@
                                         </span>
                                     @else
                                         <span class="badge bg-primary fs-6">
-                                            {{ $result->score }}
+                                            {{ $scoreLabel }}
                                         </span>
                                     @endif
                                 </td>
@@ -170,8 +176,14 @@
 
     <!-- Detail Modals -->
     @foreach($results as $result)
+        @php
+            $scoreLabel = \App\Models\ExamResult::formatPoints($result->score)
+                .' / '.\App\Models\ExamResult::formatPoints($result->maxScore());
+        @endphp
         <div class="modal fade" id="detailModal{{ $result->id }}" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            {{-- modal-xl, not modal-lg: this body now carries the sitting header,
+                 the violation timeline, the bank breakdown and a row per question. --}}
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -190,7 +202,7 @@
                             <div class="col-md-6">
                                 <strong>Score:</strong>
                                 <span class="badge bg-primary">
-                                    {{ $result->score }}/{{ $result->total_questions }}
+                                    {{ $scoreLabel }}
                                 </span>
                             </div>
                             <div class="col-md-6">
@@ -199,7 +211,10 @@
                         </div>
 
                         @if($result->examAttempt && $result->examAttempt->events->isNotEmpty())
-                            <h6>Violation Timeline:</h6>
+                            <div class="ps-section-head">
+                                <i class="fas fa-triangle-exclamation"></i>
+                                <span>Violation Timeline</span>
+                            </div>
                             <ul class="list-group mb-3">
                                 @foreach($result->examAttempt->events as $event)
                                     <li class="list-group-item d-flex justify-content-between align-items-center py-1">
@@ -213,7 +228,12 @@
                             </ul>
                         @endif
 
-                        <h6>Question-wise Analysis:</h6>
+                        @include('admin.partials.bank-breakdown', ['result' => $result])
+
+                        <div class="ps-section-head">
+                            <i class="fas fa-list-check"></i>
+                            <span>Question-wise Analysis</span>
+                        </div>
                         @foreach($result->studentAnswers as $index => $studentAnswer)
                             <div class="border rounded p-3 mb-3">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -262,7 +282,7 @@
                     </div>
                     <div class="modal-body">
                         Allow <strong>{{ $result->user?->name }}</strong> to retake this exam?
-                        Their current result (score: {{ $result->score }}/{{ $result->total_questions }}) stays in the history,
+                        Their current result (score: {{ $scoreLabel }}) stays in the history,
                         and they'll be able to start a brand-new attempt.
                     </div>
                     <div class="modal-footer">

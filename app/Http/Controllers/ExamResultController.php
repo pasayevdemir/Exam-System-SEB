@@ -29,7 +29,17 @@ class ExamResultController extends Controller
         $exam = Exam::findOrFail($examId);
 
         $query = ExamResult::where('exam_id', $exam->id)
-            ->with('user', 'studentAnswers.question', 'studentAnswers.answer', 'examAttempt.events');
+            ->with([
+                'user',
+                'studentAnswers.question.answers',
+                'studentAnswers.question.questionBank',
+                'studentAnswers.answer',
+                'examAttempt.events',
+                // The bank breakdown inside each row's modal reads weights and
+                // bank names off the attempt. Without this it is three extra
+                // queries per row on a page that shows twenty.
+                'examAttempt.attemptQuestions.question.questionBank',
+            ]);
 
         // Apply search filter if provided - search by student name or FIN code
         if ($request->filled('search')) {
@@ -90,7 +100,13 @@ class ExamResultController extends Controller
         $exam = Exam::findOrFail($examId);
 
         $results = ExamResult::where('exam_id', $exam->id)
-            ->with('user', 'studentAnswers.question.answers', 'studentAnswers.answer')
+            ->with([
+                'user',
+                'studentAnswers.question.answers',
+                'studentAnswers.answer',
+                // Weights for the "Graded Score" column, pinned per attempt.
+                'examAttempt.attemptQuestions',
+            ])
             ->orderBy('submitted_at', 'desc')
             ->get();
 

@@ -203,8 +203,8 @@ it('renders each exam as a card with its details', function () {
         ->assertSee('ps-exam-card', false)
         ->assertSee('Mathematics Midterm')
         ->assertSee('Covers chapters 1-4.')
-        ->assertSee('3 questions')
-        ->assertSee('45 minutes');
+        ->assertSee('3 sual')
+        ->assertSee('45 dəqiqə');
 });
 
 it('says so when an exam has no time limit', function () {
@@ -214,7 +214,7 @@ it('says so when an exam has no time limit', function () {
     $this->actingAs($user)
         ->get(route('student.exams'))
         ->assertOk()
-        ->assertSee('No time limit');
+        ->assertSee('Vaxt limiti yoxdur');
 });
 
 it('flags an exam that needs an entry password', function () {
@@ -224,7 +224,7 @@ it('flags an exam that needs an entry password', function () {
     $this->actingAs($user)
         ->get(route('student.exams'))
         ->assertOk()
-        ->assertSee('Entry password required');
+        ->assertSee('Giriş parolu tələb olunur');
 });
 
 it('offers Start on every card when nothing is in progress', function () {
@@ -249,10 +249,10 @@ it('shows Resume on the open exam and locks the rest', function () {
     $this->actingAs($user)
         ->get(route('student.exams'))
         ->assertOk()
-        ->assertSee('Resume Exam')
-        ->assertSee('In progress')
-        ->assertSee('Finish your open exam first')
-        ->assertSee('is still in progress');
+        ->assertSee('İmtahana davam et')
+        ->assertSee('Davam edir')
+        ->assertSee('Əvvəlcə açıq imtahanınızı bitirin')
+        ->assertSee('imtahanı hələ də davam edir');
 });
 
 it('drops a completed exam off the list entirely', function () {

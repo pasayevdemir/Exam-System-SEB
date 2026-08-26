@@ -11,8 +11,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read Exam $exam
+ * @property-read User|null $user
+ * @property-read Collection<int, ExamAttemptQuestion> $attemptQuestions
+ * @property-read Collection<int, ExamAttemptEvent> $events
+ */
 class ExamAttempt extends Model
 {
     protected $fillable = [

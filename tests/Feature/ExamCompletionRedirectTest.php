@@ -60,6 +60,6 @@ it('gives the student a way back to the app after finishing an exam', function (
     $response->assertOk()
         ->assertSee(route('student.logout'))
         ->assertSee(route('student.exams'))
-        ->assertSee('Take Another Exam')
-        ->assertSee('automatically logged out');
+        ->assertSee('Başqa imtahan ver')
+        ->assertSee('avtomatik olaraq çıxış ediləcəksiniz');
 });

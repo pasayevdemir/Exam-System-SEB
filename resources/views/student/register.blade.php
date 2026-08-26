@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Student Sign Up')
+@section('title', 'Tələbə Qeydiyyatı')
 
 @section('nav-items')
     <span class="nav-link text-white">
-        <i class="fas fa-user-graduate me-1"></i>Student Portal
+        <i class="fas fa-user-graduate me-1"></i>Tələbə Portalı
     </span>
 @endsection
 
@@ -15,7 +15,7 @@
             <div class="card-header text-center bg-primary text-white">
                 <h4 class="mb-0">
                     <i class="fas fa-user-plus me-2"></i>
-                    Create Your Account
+                    Hesabınızı yaradın
                 </h4>
             </div>
             <div class="card-body p-4">
@@ -27,7 +27,7 @@
                     @csrf
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
+                            <label for="first_name" class="form-label">Ad</label>
                             <input type="text"
                                    class="form-control @error('first_name') is-invalid @enderror"
                                    id="first_name"
@@ -40,7 +40,7 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
+                            <label for="last_name" class="form-label">Soyad</label>
                             <input type="text"
                                    class="form-control @error('last_name') is-invalid @enderror"
                                    id="last_name"
@@ -54,7 +54,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="phone_number" class="form-label">Phone Number</label>
+                        <label for="phone_number" class="form-label">Telefon nömrəsi</label>
                         <input type="text"
                                class="form-control @error('phone_number') is-invalid @enderror"
                                id="phone_number"
@@ -68,7 +68,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email Address</label>
+                        <label for="email" class="form-label">E-poçt ünvanı</label>
                         <input type="email"
                                class="form-control @error('email') is-invalid @enderror"
                                id="email"
@@ -81,7 +81,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="fin_code" class="form-label">FIN Code</label>
+                        <label for="fin_code" class="form-label">FIN kod</label>
                         <input type="text"
                                class="form-control @error('fin_code') is-invalid @enderror"
                                id="fin_code"
@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
+                        <label for="password" class="form-label">Parol</label>
                         <input type="password"
                                class="form-control @error('password') is-invalid @enderror"
                                id="password"
@@ -106,7 +106,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <label for="password_confirmation" class="form-label">Parolu təsdiqlə</label>
                         <input type="password"
                                class="form-control"
                                id="password_confirmation"
@@ -117,15 +117,15 @@
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-user-plus me-2"></i>
-                            Sign Up
+                            Qeydiyyatdan keç
                         </button>
                     </div>
                 </form>
             </div>
             <div class="card-footer text-center text-muted">
                 <small>
-                    Already have an account?
-                    <a href="{{ route('student.login') }}">Sign in</a>
+                    Artıq hesabınız var?
+                    <a href="{{ route('student.login') }}">Daxil olun</a>
                 </small>
             </div>
         </div>

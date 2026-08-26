@@ -51,9 +51,9 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
         }
 
         const styles = {
-            ok: ['bg-success', 'text-muted', 'Connected'],
-            retrying: ['bg-warning', 'text-warning', 'Retrying…'],
-            offline: ['bg-danger', 'text-danger', readQueue().length + ' answer(s) queued - will retry'],
+            ok: ['bg-success', 'text-muted', 'Bağlantı var'],
+            retrying: ['bg-warning', 'text-warning', 'Yenidən cəhd edilir…'],
+            offline: ['bg-danger', 'text-danger', readQueue().length + ' cavab növbədə — yenidən cəhd ediləcək'],
         };
         const [dotClass, labelClass, label] = styles[state];
 
@@ -157,7 +157,7 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
 
         const payload = answerPayloadFromInputs(questionId, Array.from(inputs));
 
-        setAutosaveStatus('Saving...', 'text-muted');
+        setAutosaveStatus('Saxlanılır...', 'text-muted');
         updateConnectionIndicator('retrying');
         inFlight.add(questionId);
 
@@ -168,14 +168,14 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
                 if (questionAttemptSeq[questionId] !== myQSeq) return;
 
                 dequeueAnswer(questionId);
-                if (mySeq === autosaveSeq) setAutosaveStatus('Saved', 'text-success');
+                if (mySeq === autosaveSeq) setAutosaveStatus('Saxlanıldı', 'text-success');
                 updateConnectionIndicator();
             })
             .catch(err => {
                 if (questionAttemptSeq[questionId] !== myQSeq) return;
 
                 if (err && err.status === 409) {
-                    if (mySeq === autosaveSeq) setAutosaveStatus('Time limit reached', 'text-danger');
+                    if (mySeq === autosaveSeq) setAutosaveStatus('Vaxt limiti bitdi', 'text-danger');
                     updateConnectionIndicator();
 
                     return;
@@ -183,7 +183,7 @@ export function createAutosave({ url, queueKey, csrf, clock, doc = document }) {
 
                 queueAnswer(payload);
                 if (mySeq === autosaveSeq) {
-                    setAutosaveStatus('Save failed - queued, will retry automatically', 'text-danger');
+                    setAutosaveStatus('Saxlanmadı — növbəyə alındı, avtomatik yenidən cəhd ediləcək', 'text-danger');
                 }
                 updateConnectionIndicator('offline');
             })

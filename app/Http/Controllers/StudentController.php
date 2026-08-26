@@ -64,7 +64,7 @@ class StudentController extends Controller
         $request->session()->regenerate();
 
         $response = redirect()->route('student.profile')
-            ->with('success', 'Account created successfully! Welcome.');
+            ->with('success', 'Hesabınız uğurla yaradıldı! Xoş gəldiniz.');
 
         return $this->clearAdminSession($request, $response);
     }
@@ -85,7 +85,7 @@ class StudentController extends Controller
 
         $request->session()->forget('admin_logged_in');
 
-        return $response->with('warning', 'You have been signed out of the admin panel in this browser.');
+        return $response->with('warning', 'Bu brauzerdə admin panelindən çıxış etdiniz.');
     }
 
     public function login()
@@ -98,7 +98,7 @@ class StudentController extends Controller
         $credentials = $request->validated();
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'E-poçt və ya parol yanlışdır.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
@@ -219,7 +219,7 @@ class StudentController extends Controller
         $exam = Exam::findOrFail($examId);
 
         if (! $exam->is_active) {
-            return redirect()->route('student.exams')->with('error', 'This exam is currently not active.');
+            return redirect()->route('student.exams')->with('error', 'Bu imtahan hazırda aktiv deyil.');
         }
 
         $attempt = ExamAttempt::active()
@@ -228,7 +228,7 @@ class StudentController extends Controller
             ->first();
 
         if ($attempt && $attempt->completed_at !== null) {
-            return redirect()->route('student.exams')->with('error', 'You have already completed this exam.');
+            return redirect()->route('student.exams')->with('error', 'Bu imtahanı artıq tamamlamısınız.');
         }
 
         // One exam at a time. This blocks resuming a second open attempt as well
@@ -237,7 +237,7 @@ class StudentController extends Controller
         if ($openAttempt = $this->openAttemptOnAnotherExam($exam)) {
             return redirect()->route('student.exams')->with(
                 'error',
-                "You already have \"{$openAttempt->exam->exam_name}\" in progress. Finish and submit it before starting another exam."
+                "\"{$openAttempt->exam->exam_name}\" imtahanınız davam edir. Başqa imtahana başlamazdan əvvəl onu bitirib təqdim edin."
             );
         }
 
@@ -254,17 +254,17 @@ class StudentController extends Controller
                 // Lost the race against the student's own second request.
                 return redirect()->route('student.exams')->with(
                     'error',
-                    "You already have \"{$e->openAttempt->exam->exam_name}\" in progress. Finish and submit it before starting another exam."
+                    "\"{$e->openAttempt->exam->exam_name}\" imtahanınız davam edir. Başqa imtahana başlamazdan əvvəl onu bitirib təqdim edin."
                 );
             } catch (ExamClosedException $e) {
                 // An admin deactivated the exam between this request's is_active
                 // check and generation taking the row lock. Nothing is wrong -
                 // the list will simply no longer show it.
-                return redirect()->route('student.exams')->with('error', 'This exam is currently not active.');
+                return redirect()->route('student.exams')->with('error', 'Bu imtahan hazırda aktiv deyil.');
             } catch (\RuntimeException $e) {
                 \Log::error('Exam generation failed for exam ID '.$exam->id.': '.$e->getMessage());
 
-                return redirect()->route('student.exams')->with('error', 'This exam could not be started right now. Please contact your administrator.');
+                return redirect()->route('student.exams')->with('error', 'Bu imtahan hazırda başladıla bilmədi. Administratorla əlaqə saxlayın.');
             }
         }
 
@@ -325,11 +325,11 @@ class StudentController extends Controller
             ->first();
 
         if (! $attempt) {
-            return response()->json(['success' => false, 'message' => 'No active attempt.'], 409);
+            return response()->json(['success' => false, 'message' => 'Aktiv cəhd yoxdur.'], 409);
         }
 
         if ($attempt->isExpired()) {
-            return response()->json(['success' => false, 'message' => 'Time limit reached.'], 409);
+            return response()->json(['success' => false, 'message' => 'Vaxt limiti bitdi.'], 409);
         }
 
         // Deliberately not a FormRequest: those validate before the method body
@@ -348,7 +348,7 @@ class StudentController extends Controller
             ->first();
 
         if (! $attemptQuestion) {
-            return response()->json(['success' => false, 'message' => 'Question not part of this attempt.'], 422);
+            return response()->json(['success' => false, 'message' => 'Sual bu cəhdə aid deyil.'], 422);
         }
 
         // The page identifies options by position, so resolve them against this
@@ -398,7 +398,7 @@ class StudentController extends Controller
             ->first();
 
         if (! $attempt) {
-            return response()->json(['success' => false, 'message' => 'No active attempt.'], 409);
+            return response()->json(['success' => false, 'message' => 'Aktiv cəhd yoxdur.'], 409);
         }
 
         // Deliberately not a FormRequest: those validate before the method body
@@ -423,7 +423,7 @@ class StudentController extends Controller
         $exam = Exam::findOrFail($examId);
 
         if (! $exam->requiresEntryPassword() || $request->entry_password !== $exam->entry_password) {
-            return back()->withErrors(['entry_password' => 'Incorrect password.']);
+            return back()->withErrors(['entry_password' => 'Parol yanlışdır.']);
         }
 
         session(["exam_password_verified_{$exam->id}" => true]);
@@ -443,7 +443,7 @@ class StudentController extends Controller
         abort_unless($attempt, 404);
 
         if ($attempt->completed_at !== null) {
-            return redirect()->route('student.exams')->with('error', 'You have already completed this exam.');
+            return redirect()->route('student.exams')->with('error', 'Bu imtahanı artıq tamamlamısınız.');
         }
 
         // Determine whether the time limit has actually expired server-side, so a
@@ -464,11 +464,14 @@ class StudentController extends Controller
             $isExpired
         );
 
-        $correctAnswers = $scoring->countCorrect($attemptQuestions, $submittedAnswers);
+        $scored = $scoring->calculateScore($attemptQuestions, $submittedAnswers);
+        $correctAnswers = $scored['correct'];
 
-        // For now, score only includes MCQ questions
-        // File upload questions will be graded manually by admin
-        $score = $correctAnswers;
+        // Only the MCQ half counts here, and a right answer is worth the weight
+        // its question was generated at rather than a flat point. File uploads
+        // stay out until an admin grades them and recalculateScore() folds their
+        // weight in.
+        $score = $scored['score'];
 
         // Files land on disk before the transaction opens. A disk write cannot be
         // rolled back, so doing it inside would leave the uploaded file behind
@@ -593,8 +596,8 @@ class StudentController extends Controller
                     'answer_id' => null,
                     'file_path' => null,
                     'admin_feedback' => $isExpired
-                        ? 'File not submitted before time limit.'
-                        : 'File not submitted.',
+                        ? 'Fayl vaxt limitindən əvvəl təqdim edilmədi.'
+                        : 'Fayl təqdim edilmədi.',
                     'is_graded' => false,
                 ]);
             }
@@ -618,7 +621,7 @@ class StudentController extends Controller
                 Storage::disk('local')->delete($file['file_path']);
             }
 
-            return redirect()->route('student.exams')->with('error', 'You have already completed this exam.');
+            return redirect()->route('student.exams')->with('error', 'Bu imtahanı artıq tamamlamısınız.');
         }
 
         return view('student.result', compact('examResult', 'exam'));
@@ -632,7 +635,7 @@ class StudentController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('student.login')->with('success', 'You have been successfully logged out.');
+        return redirect()->route('student.login')->with('success', 'Uğurla çıxış etdiniz.');
     }
 
     public function profile()
@@ -652,7 +655,7 @@ class StudentController extends Controller
         // hand-crafted POST carrying it writes nothing.
         Auth::user()->update($request->validated());
 
-        return redirect()->route('student.profile')->with('success', 'Your details have been updated.');
+        return redirect()->route('student.profile')->with('success', 'Məlumatlarınız yeniləndi.');
     }
 
     /**
@@ -675,7 +678,7 @@ class StudentController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('student.profile')->with('success', 'Your password has been changed.');
+        return redirect()->route('student.profile')->with('success', 'Parolunuz dəyişdirildi.');
     }
 
     /**
@@ -685,7 +688,9 @@ class StudentController extends Controller
     private function resultListData(): array
     {
         $examResults = ExamResult::where('user_id', Auth::id())
-            ->with(['exam', 'studentAnswers'])
+            // examAttempt carries target_weight, which is what each score is now
+            // shown out of.
+            ->with(['exam', 'studentAnswers', 'examAttempt'])
             ->orderBy('submitted_at', 'desc')
             ->get();
 

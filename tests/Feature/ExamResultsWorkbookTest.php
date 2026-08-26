@@ -31,7 +31,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 function buildWorkbook(Exam $exam): Spreadsheet
 {
     $results = ExamResult::where('exam_id', $exam->id)
-        ->with('user', 'studentAnswers.question.answers', 'studentAnswers.answer')
+        ->with('user', 'studentAnswers.question.answers', 'studentAnswers.answer', 'examAttempt.attemptQuestions')
         ->orderBy('submitted_at', 'desc')
         ->get();
 
@@ -114,12 +114,13 @@ describe('the summary sheet', function () {
             ->and($sheet->getCell('B3')->getValue())->toBe(1);
     });
 
-    it('heads the table with the seven result columns', function () {
+    it('heads the table with the eight result columns', function () {
         $seed = seedSubmission();
         $sheet = buildWorkbook($seed['exam'])->getSheet(0);
 
-        expect(collect(range('A', 'G'))->map(fn ($c) => $sheet->getCell($c.'7')->getValue())->all())
-            ->toBe(['Full Name', 'FIN Code', 'Score', 'Correct Answers', 'Total Questions', 'Percentage', 'Submitted At']);
+        expect(collect(range('A', 'H'))->map(fn ($c) => $sheet->getCell($c.'7')->getValue())->all())
+            ->toBe(['Full Name', 'FIN Code', 'Score', 'Max Score', 'Correct Answers', 'Total Questions',
+                'Percentage', 'Submitted At']);
     });
 
     it('writes a row per student under the header', function () {
@@ -128,8 +129,9 @@ describe('the summary sheet', function () {
 
         expect($sheet->getCell('A8')->getValue())->toBe('Ada Lovelace')
             ->and($sheet->getCell('B8')->getValue())->toBe('FIN123')
-            ->and($sheet->getCell('C8')->getValue())->toBe(1)
-            ->and($sheet->getCell('F8')->getValue())->toBe('50%');
+            ->and($sheet->getCell('C8')->getValue())->toBe(1.0)
+            ->and($sheet->getCell('D8')->getValue())->toBe(2.0)
+            ->and($sheet->getCell('G8')->getValue())->toBe('50%');
     });
 
     // Dividing by a total of zero rather than reporting one.
@@ -137,7 +139,7 @@ describe('the summary sheet', function () {
         $seed = seedSubmission(['total_questions' => 0, 'correct_answers' => 0, 'score' => 0]);
         $sheet = buildWorkbook($seed['exam'])->getSheet(0);
 
-        expect($sheet->getCell('F8')->getValue())->toBe('0%');
+        expect($sheet->getCell('G8')->getValue())->toBe('0%');
     });
 });
 

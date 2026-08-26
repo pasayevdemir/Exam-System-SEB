@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="az">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Peerstack Academy — Exam System')</title>
+    <title>@yield('title', 'Peerstack Academy — İmtahan Sistemi')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')
 </head>
@@ -69,7 +69,7 @@
     <footer class="container text-center text-muted py-4 mt-4">
         <small>
             {{ config('authorship.project') }} —
-            built by <strong>{{ config('authorship.author') }}</strong>.
+            hazırlayan: <strong>{{ config('authorship.author') }}</strong>.
             {{ config('authorship.copyright') }}
         </small>
     </footer>

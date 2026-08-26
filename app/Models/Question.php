@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read Collection<int, Answer> $answers
- * @property-read QuestionBank $questionBank
+ * @property-read QuestionBank|null $questionBank
  */
 class Question extends Model
 {

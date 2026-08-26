@@ -5,7 +5,7 @@
     its own, as does a newly permitted retake.
 --}}
 @if ($examResults->isEmpty())
-    <div class="alert alert-info">You haven't completed any exams yet.</div>
+    <div class="alert alert-info">Hələ heç bir imtahanı tamamlamamısınız.</div>
 @else
     <div class="list-group">
         @foreach ($examResults as $examResult)
@@ -14,16 +14,18 @@
                 <div>
                     <strong>{{ $examResult->exam->exam_name }}</strong>
                     <div class="text-muted small">
-                        Submitted: {{ $examResult->submitted_at->format('M d, Y H:i') }}
+                        Təqdim edildi: {{ $examResult->submitted_at->format('M d, Y H:i') }}
                     </div>
                 </div>
                 @if ($examResult->hasGradingPending())
                     <span class="badge bg-warning fs-6">
-                        <i class="fas fa-clock me-1"></i>Grading Pending
+                        <i class="fas fa-clock me-1"></i>Qiymətləndirilir
                     </span>
                 @else
                     <span class="badge bg-primary fs-6">
-                        {{ $examResult->score }}/{{ $examResult->total_questions }}
+                        {{-- Out of the paper's summed weight, not its question count:
+                             a hard question is worth two marks, not one. --}}
+                        {{ \App\Models\ExamResult::formatPoints($examResult->score) }}/{{ \App\Models\ExamResult::formatPoints($examResult->maxScore()) }}
                     </span>
                 @endif
             </a>

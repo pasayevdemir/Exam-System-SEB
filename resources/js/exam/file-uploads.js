@@ -22,7 +22,7 @@ export function bindFileUploads({ onChange, doc = document }) {
 
                 const maxSizeMb = parseInt(this.getAttribute('data-max-size') || '10');
                 if (file.size > maxSizeMb * 1024 * 1024) {
-                    previewDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>File too large!</strong> Maximum size is ' + maxSizeMb + ' MB.</div>';
+                    previewDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>Fayl çox böyükdür!</strong> Maksimum ölçü: ' + maxSizeMb + ' MB.</div>';
                     this.value = '';
                     onChange();
 
@@ -32,7 +32,7 @@ export function bindFileUploads({ onChange, doc = document }) {
                 const allowedTypes = this.getAttribute('accept').split(',');
                 const fileExtension = '.' + fileName.split('.').pop().toLowerCase();
                 if (!allowedTypes.includes(fileExtension)) {
-                    previewDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>Invalid file type!</strong> Allowed types: ' + allowedTypes.join(', ') + '</div>';
+                    previewDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i><strong>Yanlış fayl tipi!</strong> İcazə verilən tiplər: ' + allowedTypes.join(', ') + '</div>';
                     this.value = '';
                     onChange();
 

@@ -109,7 +109,7 @@ it('never shows a per question breakdown', function () {
 it('tells the student that a per question review is unavailable', function () {
     $seed = seedFinishedAttempt();
 
-    viewResult($seed)->assertOk()->assertSee('question by question review is not available');
+    viewResult($seed)->assertOk()->assertSee('Sual-sual baxış mövcud deyil');
 });
 
 it('hides exam content even while a retake is in progress', function () {
@@ -139,7 +139,7 @@ it('still shows the score while a retake is in progress', function () {
         'started_at' => now(),
     ]);
 
-    viewResult($seed)->assertOk()->assertSee('Final Score');
+    viewResult($seed)->assertOk()->assertSee('Yekun bal');
 });
 
 /* -------------------------------------------------------------------------- */
@@ -151,17 +151,17 @@ it('shows the sitting summary', function () {
 
     viewResult($seed)->assertOk()
         ->assertSee('Algorithms Midterm')
-        ->assertSee('Final Score')
+        ->assertSee('Yekun bal')
         ->assertSee($seed['user']->fin_code)
-        ->assertSee('Sitting details');
+        ->assertSee('İmtahan təfərrüatları');
 });
 
 it('shows how long the sitting took and how long was allowed', function () {
     $seed = seedFinishedAttempt();
 
     viewResult($seed)->assertOk()
-        ->assertSee('30 min')  // started an hour ago, submitted 30 minutes ago
-        ->assertSee('45 min'); // the exam's time limit
+        ->assertSee('30 dəq')  // started an hour ago, submitted 30 minutes ago
+        ->assertSee('45 dəq'); // the exam's time limit
 });
 
 it('rounds a part-minute sitting to a whole number', function () {
@@ -173,7 +173,7 @@ it('rounds a part-minute sitting to a whole number', function () {
     ]);
 
     viewResult($seed)->assertOk()
-        ->assertSee('30 min')
+        ->assertSee('30 dəq')
         ->assertDontSee('30.4');
 });
 
@@ -197,7 +197,7 @@ it('reports grading as pending while a file upload is ungraded', function () {
     ]);
 
     viewResult($seed)->assertOk()
-        ->assertSee('Grading in Progress')
+        ->assertSee('qiymətləndirilir')
         ->assertDontSee('Final Score');
 });
 

@@ -40,10 +40,11 @@ class ExamResultsWorkbook
         'A' => 'Full Name',
         'B' => 'FIN Code',
         'C' => 'Score',
-        'D' => 'Correct Answers',
-        'E' => 'Total Questions',
-        'F' => 'Percentage',
-        'G' => 'Submitted At',
+        'D' => 'Max Score',
+        'E' => 'Correct Answers',
+        'F' => 'Total Questions',
+        'G' => 'Percentage',
+        'H' => 'Submitted At',
     ];
 
     private const DETAIL_HEADERS = [
@@ -66,7 +67,10 @@ class ExamResultsWorkbook
     private const SUMMARY_HEADER_ROW = 7;
 
     /** What a hand-marked file submission has to reach to read as Passed. */
-    private const PASS_MARK = 50;
+    private const PASS_MARK = ExamResult::PASS_MARK;
+
+    /** What a question is worth when its attempt row is gone - see ExamResult. */
+    private const FALLBACK_WEIGHT = 1.0;
 
     private const GREEN = 'C6EFCE';
 
@@ -75,8 +79,9 @@ class ExamResultsWorkbook
     private const AMBER = 'FFEB9C';
 
     /**
-     * @param  Collection<int, ExamResult>  $results  with user, studentAnswers.question
-     *                                                and studentAnswers.answer loaded
+     * @param  Collection<int, ExamResult>  $results  with user, studentAnswers.question.answers,
+     *                                                studentAnswers.answer and
+     *                                                examAttempt.attemptQuestions loaded
      */
     public function __construct(
         private readonly Exam $exam,
@@ -140,27 +145,33 @@ class ExamResultsWorkbook
             $this->text($sheet, $column.$row, $header);
         }
 
-        $sheet->getStyle('A'.$row.':G'.$row)->applyFromArray($this->headerStyle());
+        $sheet->getStyle('A'.$row.':H'.$row)->applyFromArray($this->headerStyle());
 
         foreach ($this->results as $result) {
             $row++;
 
-            $percentage = $result->total_questions > 0
-                ? round(($result->correct_answers / $result->total_questions) * 100, 1)
+            $maxScore = $result->maxScore();
+
+            // Out of the marks available rather than the question count. The two
+            // only agree on an all-easy paper now that a hard question carries
+            // two marks, and this sheet has to match the page it is exported from.
+            $percentage = $maxScore > 0
+                ? round(((float) $result->score / $maxScore) * 100, 1)
                 : 0;
 
             $this->text($sheet, 'A'.$row, $result->user?->name ?? 'N/A');
             $this->text($sheet, 'B'.$row, $result->user?->fin_code ?? 'N/A');
-            $sheet->setCellValue('C'.$row, $result->score);
-            $sheet->setCellValue('D'.$row, $result->correct_answers);
-            $sheet->setCellValue('E'.$row, $result->total_questions);
-            $this->text($sheet, 'F'.$row, $percentage.'%');
-            $this->text($sheet, 'G'.$row, $result->submitted_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('C'.$row, (float) $result->score);
+            $sheet->setCellValue('D'.$row, $maxScore);
+            $sheet->setCellValue('E'.$row, $result->correct_answers);
+            $sheet->setCellValue('F'.$row, $result->total_questions);
+            $this->text($sheet, 'G'.$row, $percentage.'%');
+            $this->text($sheet, 'H'.$row, $result->submitted_at->format('Y-m-d H:i:s'));
 
-            $this->banded($sheet, 'A'.$row.':G'.$row, $row);
+            $this->banded($sheet, 'A'.$row.':H'.$row, $row);
         }
 
-        $this->autoSize($sheet, 'A', 'G');
+        $this->autoSize($sheet, 'A', 'H');
     }
 
     private function writeDetails(Worksheet $sheet): void
@@ -180,6 +191,7 @@ class ExamResultsWorkbook
             // here, so numbering by row made the second option read as the next
             // question and pushed every question after it off by one.
             $numbers = [];
+            $weights = $this->weightsFor($result);
 
             foreach ($result->studentAnswers as $studentAnswer) {
                 $row++;
@@ -197,7 +209,13 @@ class ExamResultsWorkbook
                 // "Is Correct" cell and the fill behind it cannot disagree.
                 $verdict = $isFileUpload
                     ? $this->writeFileUploadAnswer($sheet, $row, $studentAnswer)
-                    : $this->writeMcqAnswer($sheet, $row, $studentAnswer, $question);
+                    : $this->writeMcqAnswer(
+                        $sheet,
+                        $row,
+                        $studentAnswer,
+                        $question,
+                        $weights[$question->id] ?? self::FALLBACK_WEIGHT
+                    );
 
                 // Banding first: it covers A..M, so applying it after the
                 // verdict fill painted over that cell on every even row and left
@@ -245,7 +263,7 @@ class ExamResultsWorkbook
     /**
      * @return string the fill colour for this row's verdict
      */
-    private function writeMcqAnswer(Worksheet $sheet, int $row, $studentAnswer, $question): string
+    private function writeMcqAnswer(Worksheet $sheet, int $row, $studentAnswer, $question, float $weight): string
     {
         $correct = $question->answers->firstWhere('is_correct', true);
 
@@ -264,10 +282,32 @@ class ExamResultsWorkbook
         $this->text($sheet, 'I'.$row, '');
         $this->text($sheet, 'J'.$row, '');
         $this->text($sheet, 'K'.$row, 'Auto-graded');
-        $this->text($sheet, 'L'.$row, $isCorrect ? '1' : '0');
+        // The marks this option carries, so the sheet reads in the same currency
+        // as the score on the summary sheet rather than in flat points.
+        $this->text($sheet, 'L'.$row, $isCorrect ? ExamResult::formatPoints($weight) : '0');
         $this->text($sheet, 'M'.$row, '');
 
         return $isCorrect ? self::GREEN : self::RED;
+    }
+
+    /**
+     * weight_at_generation per question id for one result, so a question's marks
+     * are the ones its paper was generated with rather than whatever an admin
+     * has since made that question worth.
+     *
+     * @return array<int, float>
+     */
+    private function weightsFor(ExamResult $result): array
+    {
+        $attempt = $result->examAttempt;
+
+        if ($attempt === null) {
+            return [];
+        }
+
+        return $attempt->attemptQuestions
+            ->mapWithKeys(fn ($aq) => [(int) $aq->question_id => (float) $aq->weight_at_generation])
+            ->all();
     }
 
     /**

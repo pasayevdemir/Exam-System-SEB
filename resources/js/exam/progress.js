@@ -55,11 +55,11 @@ export function createProgress({ totalQuestions, doc = document }) {
         modalUnansweredWarning.classList.toggle('d-none', unansweredCount === 0);
 
         if (unansweredCount === 0) {
-            submitWarning.textContent = 'All questions answered. You can now submit the exam.';
+            submitWarning.textContent = 'Bütün suallara cavab verildi. İndi imtahanı təqdim edə bilərsiniz.';
             submitWarning.classList.remove('text-muted');
             submitWarning.classList.add('text-success');
         } else {
-            submitWarning.textContent = unansweredCount + ' question(s) unanswered - you can still submit, but they will score nothing.';
+            submitWarning.textContent = unansweredCount + ' sual cavablanmayıb — yenə də təqdim edə bilərsiniz, lakin bal gətirməyəcək.';
             submitWarning.classList.remove('text-success');
             submitWarning.classList.add('text-muted');
         }

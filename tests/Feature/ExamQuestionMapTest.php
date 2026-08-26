@@ -88,7 +88,7 @@ it('renders a question map grouped by bank', function () {
     $this->actingAs($user)
         ->get(route('student.exam', $seed['exam']->id))
         ->assertOk()
-        ->assertSee('Question Map')
+        ->assertSee('Sual xəritəsi')
         ->assertSee('English Language')
         ->assertSee('Logical Reasoning');
 });

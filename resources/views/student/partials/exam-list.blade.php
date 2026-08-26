@@ -8,17 +8,17 @@
     <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
         <div>
             <i class="fas fa-hourglass-half me-2"></i>
-            <strong>{{ $openAttempt->exam->exam_name }}</strong> is still in progress.
-            You can only sit one exam at a time — submit this one to unlock the others.
+            <strong>{{ $openAttempt->exam->exam_name }}</strong> imtahanı hələ də davam edir.
+            Eyni anda yalnız bir imtahan verə bilərsiniz — digərlərini açmaq üçün bunu təqdim edin.
         </div>
         <a href="{{ route('student.exam', $openAttempt->exam_id) }}" class="btn btn-warning btn-sm">
-            <i class="fas fa-arrow-right me-1"></i>Resume
+            <i class="fas fa-arrow-right me-1"></i>Davam et
         </a>
     </div>
 @endif
 
 @if ($activeExams->isEmpty())
-    <div class="alert alert-info">There are no active exams right now.</div>
+    <div class="alert alert-info">Hazırda aktiv imtahan yoxdur.</div>
 @else
     <div class="row row-cols-1 row-cols-md-2 g-4">
         @foreach ($activeExams as $exam)
@@ -35,7 +35,7 @@
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <h5 class="card-title mb-0">{{ $exam->exam_name }}</h5>
                             @if ($isOpen)
-                                <span class="badge bg-warning text-dark">In progress</span>
+                                <span class="badge bg-warning text-dark">Davam edir</span>
                             @endif
                         </div>
 
@@ -45,18 +45,18 @@
 
                         <ul class="list-unstyled ps-exam-card-meta mb-0">
                             @if ($questionCount > 0)
-                                <li><i class="fas fa-question-circle me-2"></i>{{ $questionCount }} questions</li>
+                                <li><i class="fas fa-question-circle me-2"></i>{{ $questionCount }} sual</li>
                             @endif
                             <li>
                                 <i class="fas fa-stopwatch me-2"></i>
                                 @if ($exam->time_limit_minutes)
-                                    {{ $exam->time_limit_minutes }} minutes
+                                    {{ $exam->time_limit_minutes }} dəqiqə
                                 @else
-                                    No time limit
+                                    Vaxt limiti yoxdur
                                 @endif
                             </li>
                             @if ($exam->requiresEntryPassword())
-                                <li><i class="fas fa-lock me-2"></i>Entry password required</li>
+                                <li><i class="fas fa-lock me-2"></i>Giriş parolu tələb olunur</li>
                             @endif
                         </ul>
                     </div>
@@ -64,11 +64,11 @@
                         @if ($isOpen)
                             {{-- No rules modal on resume: the student already accepted them to get here. --}}
                             <a href="{{ route('student.exam', $exam->id) }}" class="btn btn-warning w-100">
-                                <i class="fas fa-play me-1"></i>Resume Exam
+                                <i class="fas fa-play me-1"></i>İmtahana davam et
                             </a>
                         @elseif ($isLocked)
                             <button type="button" class="btn btn-secondary w-100" disabled>
-                                <i class="fas fa-lock me-1"></i>Finish your open exam first
+                                <i class="fas fa-lock me-1"></i>Əvvəlcə açıq imtahanınızı bitirin
                             </button>
                         @else
                             <button type="button"
@@ -78,7 +78,7 @@
                                     data-url="{{ route('student.exam', $exam->id) }}"
                                     data-name="{{ $exam->exam_name }}"
                                     data-time-limit="{{ $exam->time_limit_minutes }}">
-                                Start <i class="fas fa-arrow-right ms-1"></i>
+                                Başla <i class="fas fa-arrow-right ms-1"></i>
                             </button>
                         @endif
                     </div>

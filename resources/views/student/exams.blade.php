@@ -2,7 +2,7 @@
 
 @section('page', 'student-exams')
 
-@section('title', 'Available Exams')
+@section('title', 'Mövcud İmtahanlar')
 
 @section('nav-items')
     @include('student.partials.nav')
@@ -13,7 +13,7 @@
     <div class="col-lg-10">
         <h4 class="mb-4">
             <i class="fas fa-list me-2"></i>
-            Available Exams
+            Mövcud İmtahanlar
         </h4>
 
         @php

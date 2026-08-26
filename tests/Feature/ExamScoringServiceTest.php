@@ -187,16 +187,39 @@ describe('an expired attempt', function () {
     });
 });
 
-describe('counting correct answers', function () {
-    it('awards a point for the right single-choice answer', function () {
+describe('scoring a submission', function () {
+    it('awards a question its weight for the right single-choice answer', function () {
         $user = User::factory()->create();
-        $seed = seedAttempt($user, [['type' => 'single', 'options' => 4, 'correct' => [2]]]);
+        $seed = seedAttempt($user, [['type' => 'single', 'options' => 4, 'correct' => [2], 'weight' => 1.5]]);
         $attemptQuestions = scoring()->questionsFor($seed['attempt']);
         $questionId = $seed['questions'][0]['question']->id;
         $answers = $seed['questions'][0]['answers'];
 
-        expect(scoring()->countCorrect($attemptQuestions, collect([$questionId => $answers[2]->id])))->toBe(1)
-            ->and(scoring()->countCorrect($attemptQuestions, collect([$questionId => $answers[0]->id])))->toBe(0);
+        expect(scoring()->calculateScore($attemptQuestions, collect([$questionId => $answers[2]->id])))
+            ->toBe(['correct' => 1, 'score' => 1.5])
+            ->and(scoring()->calculateScore($attemptQuestions, collect([$questionId => $answers[0]->id])))
+            ->toBe(['correct' => 0, 'score' => 0.0]);
+    });
+
+    // The count and the mark are different numbers now: three right answers on a
+    // mixed paper are not three points.
+    it('sums the weights of the questions answered correctly', function () {
+        $user = User::factory()->create();
+        $seed = seedAttempt($user, [
+            ['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 1.0],
+            ['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 1.5],
+            ['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 2.0],
+        ]);
+        $attemptQuestions = scoring()->questionsFor($seed['attempt']);
+
+        $answer = fn (int $index, int $position) => [
+            $seed['questions'][$index]['question']->id => $seed['questions'][$index]['answers'][$position]->id,
+        ];
+
+        // The easy one wrong, the medium and hard ones right.
+        expect(scoring()->calculateScore($attemptQuestions, collect(
+            $answer(0, 1) + $answer(1, 0) + $answer(2, 0)
+        )))->toBe(['correct' => 2, 'score' => 3.5]);
     });
 
     // Without this, one known-correct id could be replayed across every question.
@@ -211,24 +234,24 @@ describe('counting correct answers', function () {
         $firstQuestionId = $seed['questions'][0]['question']->id;
         $secondQuestionsCorrectId = $seed['questions'][1]['answers'][0]->id;
 
-        expect(scoring()->countCorrect($attemptQuestions, collect([
+        expect(scoring()->calculateScore($attemptQuestions, collect([
             $firstQuestionId => $secondQuestionsCorrectId,
-        ])))->toBe(0);
+        ])))->toBe(['correct' => 0, 'score' => 0.0]);
     });
 
-    it('gives multiple choice a point only for an exact match', function () {
+    it('gives multiple choice its weight only for an exact match', function () {
         $user = User::factory()->create();
-        $seed = seedAttempt($user, [['type' => 'multiple', 'options' => 4, 'correct' => [0, 2]]]);
+        $seed = seedAttempt($user, [['type' => 'multiple', 'options' => 4, 'correct' => [0, 2], 'weight' => 2.0]]);
         $attemptQuestions = scoring()->questionsFor($seed['attempt']);
         $questionId = $seed['questions'][0]['question']->id;
         $a = $seed['questions'][0]['answers'];
 
-        $count = fn (array $ids) => scoring()->countCorrect($attemptQuestions, collect([$questionId => $ids]));
+        $score = fn (array $ids) => scoring()->calculateScore($attemptQuestions, collect([$questionId => $ids]));
 
-        expect($count([$a[0]->id, $a[2]->id]))->toBe(1)
-            ->and($count([$a[2]->id, $a[0]->id]))->toBe(1)   // order must not matter
-            ->and($count([$a[0]->id]))->toBe(0)              // one correct option missing
-            ->and($count([$a[0]->id, $a[2]->id, $a[1]->id]))->toBe(0); // one wrong option added
+        expect($score([$a[0]->id, $a[2]->id]))->toBe(['correct' => 1, 'score' => 2.0])
+            ->and($score([$a[2]->id, $a[0]->id]))->toBe(['correct' => 1, 'score' => 2.0])   // order must not matter
+            ->and($score([$a[0]->id]))->toBe(['correct' => 0, 'score' => 0.0])              // one correct option missing
+            ->and($score([$a[0]->id, $a[2]->id, $a[1]->id]))->toBe(['correct' => 0, 'score' => 0.0]); // one wrong option added
     });
 
     it('scores an unanswered question as zero rather than failing', function () {
@@ -236,10 +259,26 @@ describe('counting correct answers', function () {
         $seed = seedAttempt($user, [['type' => 'single', 'options' => 3, 'correct' => [0]]]);
         $questionId = $seed['questions'][0]['question']->id;
 
-        expect(scoring()->countCorrect(
+        expect(scoring()->calculateScore(
             scoring()->questionsFor($seed['attempt']),
             collect([$questionId => null])
-        ))->toBe(0);
+        ))->toBe(['correct' => 0, 'score' => 0.0]);
+    });
+
+    // The weight is read off the attempt, not off the question, so re-grading a
+    // paper after an admin re-rates a question cannot move a mark already given.
+    it('uses the weight pinned at generation rather than the question current one', function () {
+        $user = User::factory()->create();
+        $seed = seedAttempt($user, [['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 1.0]]);
+        $questionId = $seed['questions'][0]['question']->id;
+        $correctId = $seed['questions'][0]['answers'][0]->id;
+
+        $seed['questions'][0]['question']->update(['difficulty' => 'hard']);
+
+        expect(scoring()->calculateScore(
+            scoring()->questionsFor($seed['attempt']),
+            collect([$questionId => $correctId])
+        ))->toBe(['correct' => 1, 'score' => 1.0]);
     });
 });
 
@@ -261,7 +300,7 @@ describe('file-upload questions', function () {
         $resolved = scoring()->resolveAnswers($attemptQuestions, [$fileQuestionId => 0], false);
 
         expect($resolved)->toBeEmpty()
-            ->and(scoring()->countCorrect($attemptQuestions, $resolved))->toBe(0);
+            ->and(scoring()->calculateScore($attemptQuestions, $resolved))->toBe(['correct' => 0, 'score' => 0.0]);
     });
 
     it('leaves file-upload questions out of an expired attempt drafts', function () {

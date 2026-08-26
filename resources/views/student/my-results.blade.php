@@ -2,7 +2,7 @@
 
 @section('page', 'my-results')
 
-@section('title', 'My Results')
+@section('title', 'Nəticələrim')
 
 @section('nav-items')
     @include('student.partials.nav')
@@ -13,7 +13,7 @@
     <div class="col-md-8">
         <h4 class="mb-4">
             <i class="fas fa-chart-line me-2"></i>
-            My Results
+            Nəticələrim
         </h4>
 
         @if (session('error'))

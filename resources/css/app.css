@@ -323,6 +323,16 @@ body {
     border: 1px solid rgba(232,87,87,0.2);
 }
 
+/* The third of the three states, and the reason the set is written out here at
+   all: Bootstrap ships bg-warning as a solid #ffc107, so a warning badge sat
+   next to these two pale pills in a different visual family entirely. */
+.badge.bg-warning,
+.status-badge.bg-warning {
+    background-color: rgba(245,166,35,0.14) !important;
+    color: #9a6200 !important;
+    border: 1px solid rgba(245,166,35,0.28);
+}
+
 /* ── Alerts ── */
 
 .alert {
@@ -744,7 +754,14 @@ h1.h3 {
 }
 
 .progress-bar {
-    background-color: var(--ps-green) !important;
+    /* No !important on the colour. Bootstrap's own .bg-* utilities are
+       !important at the same specificity, so this rule used to win every bar in
+       the app on source order alone - a bar asking to be red or amber rendered
+       Peerstack green and nothing in the markup said why. Green stays the
+       default for a bar with no modifier; anything else states its colour with a
+       .progress-bar.X-- rule, which outranks this one on specificity rather than
+       on whichever rule the bundler happens to emit last. */
+    background-color: var(--ps-green);
     border-radius: 20px;
     transition: width 0.3s ease;
 }
@@ -1079,6 +1096,74 @@ h1.h3 {
     color: var(--ps-muted);
     margin-bottom: 0.25rem;
 }
+
+/* Heading for a section inside the admin review modals. Same vocabulary as
+   .ps-md-label above and .table thead th - small, uppercase, muted - plus the
+   rule that actually separates one section from the next. Those modals stack
+   four unrelated blocks with nothing but a bare <h6> between them. */
+.ps-section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ps-muted);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1.5px solid var(--ps-border);
+}
+
+/* Anything pushed to the far end of a section head - a running total. */
+.ps-section-head__aside {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--ps-text);
+}
+
+/* ── Bank breakdown (admin results modal) ── */
+
+/* One state per bank row - good / mid / weak - decides both the percentage and
+   the bar. They used to be two independent Bootstrap bg-* classes, which is how
+   a row could show an amber number above a green bar and nothing in the markup
+   looked wrong. */
+
+.ps-bank-row + .ps-bank-row { margin-top: 1rem; }
+
+.ps-bank-row .progress { height: 10px; }
+
+.ps-bank-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ps-text);
+}
+
+/* tabular-nums on both: percentages and marks sit in a column, and proportional
+   digits make that column visibly ragged from row to row. */
+.ps-bank-pct {
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.ps-bank-meta {
+    font-size: 0.75rem;
+    color: var(--ps-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.ps-bank-pct--good { color: var(--ps-green-dark); }
+.ps-bank-pct--mid  { color: #9a6200; }
+.ps-bank-pct--weak { color: #c0392b; }
+
+/* Specificity 0,2,0, deliberately above the bare .progress-bar default, so the
+   colour holds no matter where the bundler emits these relative to it. */
+.progress-bar.ps-bank-bar--good { background-color: var(--ps-green); }
+.progress-bar.ps-bank-bar--mid  { background-color: var(--ps-warning); }
+.progress-bar.ps-bank-bar--weak { background-color: var(--ps-danger); }
 
 
 /* ── Math (KaTeX) ── */

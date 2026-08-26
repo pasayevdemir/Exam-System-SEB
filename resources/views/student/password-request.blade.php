@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Request a Password Reset')
+@section('title', 'Parol Sıfırlama Sorğusu')
 
 @section('nav-items')
     <span class="nav-link text-white">
-        <i class="fas fa-user-graduate me-1"></i>Student Portal
+        <i class="fas fa-user-graduate me-1"></i>Tələbə Portalı
     </span>
 @endsection
 
@@ -15,14 +15,14 @@
             <div class="card-header text-center bg-primary text-white">
                 <h4 class="mb-0">
                     <i class="fas fa-key me-2"></i>
-                    Request a Password Reset
+                    Parol Sıfırlama Sorğusu
                 </h4>
             </div>
             <div class="card-body p-4">
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
-                    Passwords are reset by an administrator. Submit your request below,
-                    then contact your exam administrator to collect the new password.
+                    Parollar administrator tərəfindən sıfırlanır. Sorğunuzu aşağıda göndərin,
+                    sonra yeni parolu almaq üçün imtahan administratoru ilə əlaqə saxlayın.
                 </div>
 
                 <form action="{{ route('student.password-request.store') }}" method="POST">
@@ -30,7 +30,7 @@
                     <div class="mb-4">
                         <label for="email" class="form-label">
                             <i class="fas fa-envelope me-1"></i>
-                            Email Address
+                            E-poçt ünvanı
                         </label>
                         <input type="email"
                                class="form-control @error('email') is-invalid @enderror"
@@ -47,15 +47,15 @@
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-paper-plane me-2"></i>
-                            Submit Request
+                            Sorğu göndər
                         </button>
                     </div>
                 </form>
             </div>
             <div class="card-footer text-center text-muted">
                 <small>
-                    Remembered it?
-                    <a href="{{ route('student.login') }}">Back to sign in</a>
+                    Yadınıza düşdü?
+                    <a href="{{ route('student.login') }}">Girişə qayıt</a>
                 </small>
             </div>
         </div>

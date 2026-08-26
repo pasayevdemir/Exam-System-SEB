@@ -25,9 +25,11 @@ use App\Models\User;
  * POST straight at the submit endpoint without driving ExamGenerationService.
  *
  * Each spec is ['type' => 'single'|'multiple'|'file_upload', 'options' => int,
- * 'correct' => int[]] where 'correct' holds the option positions that are right.
- * answer_display_order is left in natural order, so option position N is always
- * $questions[i]['answers'][N] and a test can reason about positions directly.
+ * 'correct' => int[], 'weight' => float] where 'correct' holds the option
+ * positions that are right and 'weight' is what the question is worth, pinned
+ * the way ExamGenerationService pins it. answer_display_order is left in natural
+ * order, so option position N is always $questions[i]['answers'][N] and a test
+ * can reason about positions directly.
  *
  * @return array{exam: Exam, attempt: ExamAttempt, questions: array<int, array{question: Question, answers: Answer[]}>}
  */
@@ -43,9 +45,11 @@ function seedAttempt(User $user, array $specs): array
     ]);
 
     $questions = [];
+    $totalWeight = 0.0;
 
     foreach (array_values($specs) as $order => $spec) {
         $type = $spec['type'] ?? 'single';
+        $weight = (float) ($spec['weight'] ?? 1.0);
 
         $question = Question::factory()->create([
             'question_bank_id' => $bank->id,
@@ -70,14 +74,18 @@ function seedAttempt(User $user, array $specs): array
             'exam_attempt_id' => $attempt->id,
             'question_id' => $question->id,
             'display_order' => $order,
-            'weight_at_generation' => 1.0,
+            'weight_at_generation' => $weight,
             'answer_display_order' => $answers === []
                 ? null
                 : array_map(fn (Answer $a) => $a->id, $answers),
         ]);
 
+        $totalWeight += $weight;
         $questions[] = ['question' => $question, 'answers' => $answers];
     }
+
+    // What a perfect paper is worth, exactly as ExamGenerationService records it.
+    $attempt->update(['target_weight' => $totalWeight]);
 
     return ['exam' => $exam, 'attempt' => $attempt, 'questions' => $questions];
 }
@@ -114,7 +122,7 @@ it('scores a correct single-choice answer', function () {
         'answers' => [$seed['questions'][0]['question']->id => 2],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(1);
+    expect((float) ExamResult::first()->score)->toBe(1.0);
 });
 
 it('does not score a wrong single-choice answer', function () {
@@ -127,7 +135,7 @@ it('does not score a wrong single-choice answer', function () {
         'answers' => [$seed['questions'][0]['question']->id => 0],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(0);
+    expect((float) ExamResult::first()->score)->toBe(0.0);
 });
 
 it('scores a multiple-choice answer only on an exact match', function () {
@@ -140,7 +148,7 @@ it('scores a multiple-choice answer only on an exact match', function () {
         'answers' => [$seed['questions'][0]['question']->id => [0, 2]],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(1);
+    expect((float) ExamResult::first()->score)->toBe(1.0);
 });
 
 it('does not score a partially correct multiple-choice answer', function () {
@@ -153,7 +161,7 @@ it('does not score a partially correct multiple-choice answer', function () {
         'answers' => [$seed['questions'][0]['question']->id => [0]],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(0);
+    expect((float) ExamResult::first()->score)->toBe(0.0);
 });
 
 it('resolves a submitted position back to the right answer row', function () {
@@ -268,7 +276,7 @@ it('cannot credit another question by submitting a raw answer id', function () {
         ],
     ]);
 
-    expect(ExamResult::first()?->score ?? 0)->toBe(1);
+    expect((float) (ExamResult::first()?->score ?? 0))->toBe(1.0);
 });
 
 it('resolves positions against the options that still exist', function () {
@@ -288,7 +296,7 @@ it('resolves positions against the options that still exist', function () {
         'answers' => [$q['question']->id => 1],
     ]);
 
-    expect(ExamResult::first()?->score ?? 0)->toBe(1);
+    expect((float) (ExamResult::first()?->score ?? 0))->toBe(1.0);
 });
 
 it('rejects an option position outside the question range', function () {
@@ -394,7 +402,7 @@ it('ignores answers for questions outside the attempt', function () {
         ],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(1);
+    expect((float) ExamResult::first()->score)->toBe(1.0);
 });
 
 // A file-upload question carries no options at all, so an empty selection
@@ -416,5 +424,5 @@ it('gives no point for an answer posted against a file-upload question', functio
         ],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(0);
+    expect((float) ExamResult::first()->score)->toBe(0.0);
 });

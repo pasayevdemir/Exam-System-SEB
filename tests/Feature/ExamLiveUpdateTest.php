@@ -235,7 +235,7 @@ it('reflects a changed question count when a bank is attached', function () {
         'sort_order' => 0,
     ]);
 
-    expect(examsState($user, $stale)->json('html'))->toContain('7 questions');
+    expect(examsState($user, $stale)->json('html'))->toContain('7 sual');
 });
 
 it('brings an exam back into the fragment once a retake is allowed', function () {
@@ -271,8 +271,8 @@ it('is scoped to the calling student', function () {
 
     $bystander = User::factory()->create();
 
-    expect(examsState($sitting)->json('html'))->toContain('is still in progress');
-    expect(examsState($bystander)->json('html'))->not->toContain('is still in progress');
+    expect(examsState($sitting)->json('html'))->toContain('imtahanı hələ də davam edir');
+    expect(examsState($bystander)->json('html'))->not->toContain('imtahanı hələ də davam edir');
 });
 
 /* -------------------------------------------------------------------------- */
@@ -296,7 +296,7 @@ it('replaces grading-pending with a score once an admin grades a submission', fu
         ->getJson(route('student.my-results-state'))
         ->assertOk();
 
-    expect($stale->json('html'))->toContain('Grading Pending');
+    expect($stale->json('html'))->toContain('Qiymətləndirilir');
 
     $pending->update(['is_graded' => true, 'manual_score' => 80]);
     $seed['result']->recalculateScore();
@@ -306,7 +306,7 @@ it('replaces grading-pending with a score once an admin grades a submission', fu
         ->assertOk();
 
     expect($fresh->json('changed'))->toBeTrue();
-    expect($fresh->json('html'))->not->toContain('Grading Pending');
+    expect($fresh->json('html'))->not->toContain('Qiymətləndirilir');
 });
 
 it('reports no change on the results fragment when nothing was graded', function () {

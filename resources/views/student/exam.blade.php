@@ -12,7 +12,7 @@
         @csrf
         <button type="submit" class="btn btn-link nav-link text-white" style="text-decoration: none;">
             <i class="fas fa-sign-out-alt me-1"></i>
-            Logout
+            Çıxış
         </button>
     </form>
 @endsection
@@ -35,7 +35,7 @@
         if (!isset($bankGroups[$bankKey])) {
             $bankTone[$bankKey] = $bankPalette[count($bankGroups) % count($bankPalette)];
             $bankGroups[$bankKey] = [
-                'name' => $bank->name ?? 'Unassigned',
+                'name' => $bank->name ?? 'Təyin edilməyib',
                 'tone' => $bankTone[$bankKey],
                 'items' => [],
             ];
@@ -57,30 +57,30 @@
                         {{ $exam->exam_name }}
                     </h4>
                     <div class="text-end">
-                        <div>Exam ID: {{ $exam->exam_id }}</div>
-                        <small>Total Questions: {{ $questions->count() }}</small>
+                        <div>İmtahan ID: {{ $exam->exam_id }}</div>
+                        <small>Ümumi sual: {{ $questions->count() }}</small>
                     </div>
                 </div>
             </div>
             @if($exam->time_limit_minutes)
                 <div class="card-header text-white text-center py-2 ps-timer-bar" id="timer-bar">
                     <i class="fas fa-stopwatch me-2"></i>
-                    Time Remaining: <span id="exam-timer" class="fw-bold fs-5">{{ gmdate('i:s', $remainingSeconds ?? 0) }}</span>
+                    Qalan vaxt: <span id="exam-timer" class="fw-bold fs-5">{{ gmdate('i:s', $remainingSeconds ?? 0) }}</span>
                 </div>
             @endif
             <div class="card-header text-center py-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="enterFullscreenBtn">
-                    <i class="fas fa-expand me-1"></i>Enter Fullscreen
+                    <i class="fas fa-expand me-1"></i>Tam ekran
                 </button>
             </div>
             <div class="card-body">
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Instructions:</strong>
+                    <strong>Təlimat:</strong>
                     <ul class="mb-0 mt-2">
-                        <li>Please answer all questions before submitting</li>
-                        <li>You can change your answers before final submission</li>
-                        <li>Once submitted, you cannot modify your answers</li>
+                        <li>Təqdim etməzdən əvvəl bütün suallara cavab verin</li>
+                        <li>Yekun təqdimata qədər cavablarınızı dəyişə bilərsiniz</li>
+                        <li>Təqdim etdikdən sonra cavablarınızı dəyişmək mümkün deyil</li>
                     </ul>
                 </div>
 
@@ -104,12 +104,12 @@
                                 </div>
                                 <small class="text-muted">
                                     <span class="badge ps-bank-tag {{ $questionTone }} me-1">
-                                        <i class="fas fa-layer-group me-1"></i>{{ $questionBank->name ?? 'Unassigned' }}
+                                        <i class="fas fa-layer-group me-1"></i>{{ $questionBank->name ?? 'Təyin edilməyib' }}
                                     </span>
                                     @if($question->question_type === 'file_upload')
-                                        File Upload Question
+                                        Fayl yükləmə sualı
                                     @else
-                                        {{ ucfirst($question->question_type) }} Choice Question
+                                        {{ $question->question_type === 'single' ? 'Tək seçimli sual' : 'Çox seçimli sual' }}
                                     @endif
                                 </small>
                             </div>
@@ -118,18 +118,18 @@
                                     <!-- File Upload Question -->
                                     <div class="alert alert-info mb-3">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <strong>File Upload Instructions:</strong>
+                                        <strong>Fayl yükləmə təlimatı:</strong>
                                         <ul class="mb-0 mt-2">
-                                            <li>Upload your answer as a file</li>
-                                            <li><strong>Allowed formats:</strong> {{ strtoupper(implode(', ', $question->getAllowedExtensions())) }}</li>
-                                            <li><strong>Maximum file size:</strong> {{ $question->getMaxFileSize() }} MB</li>
-                                            <li>Make sure your file is clearly labeled and readable</li>
+                                            <li>Cavabınızı fayl şəklində yükləyin</li>
+                                            <li><strong>İcazə verilən formatlar:</strong> {{ strtoupper(implode(', ', $question->getAllowedExtensions())) }}</li>
+                                            <li><strong>Maksimum fayl ölçüsü:</strong> {{ $question->getMaxFileSize() }} MB</li>
+                                            <li>Faylın aydın adlandırıldığından və oxunaqlı olduğundan əmin olun</li>
                                         </ul>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <label for="file_upload_{{ $question->id }}" class="form-label">
-                                            <i class="fas fa-upload me-2"></i>Select your answer file
+                                            <i class="fas fa-upload me-2"></i>Cavab faylını seçin
                                         </label>
                                         <input type="file" 
                                                class="form-control question-input file-input @error('file_uploads.' . $question->id) is-invalid @enderror" 
@@ -141,7 +141,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <div class="form-text">
-                                            Choose a file to upload as your answer to this question.
+                                            Bu suala cavab olaraq yükləyəcəyiniz faylı seçin.
                                         </div>
                                     </div>
                                     
@@ -196,7 +196,7 @@
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 <div id="progress-info" class="text-muted">
-                                    <span id="answered-count">0</span> of {{ $questions->count() }} questions answered
+                                    <span id="answered-count">0</span> / {{ $questions->count() }} suala cavab verilib
                                 </div>
                                 <div class="progress mt-2">
                                     <div class="progress-bar" role="progressbar" style="width: 0%" id="progress-bar"></div>
@@ -204,18 +204,18 @@
                                 <div id="autosave-status" class="text-muted small mt-1" style="min-height: 1.2em;"></div>
                                 <div class="small mt-1">
                                     <span id="connection-dot" class="d-inline-block rounded-circle bg-success" style="width:8px;height:8px;"></span>
-                                    <span id="connection-label" class="text-muted">Connected</span>
+                                    <span id="connection-label" class="text-muted">Bağlantı var</span>
                                 </div>
                             </div>
                             
                             <button type="button" class="btn btn-success btn-lg" id="submitBtn" data-bs-toggle="modal" data-bs-target="#confirmSubmitModal">
                                 <i class="fas fa-paper-plane me-2"></i>
-                                Submit Exam
+                                İmtahanı təqdim et
                             </button>
 
                             <div class="mt-2">
                                 <small class="text-muted" id="submit-warning">
-                                    You can submit at any time - unanswered questions score nothing
+                                    İstənilən vaxt təqdim edə bilərsiniz — cavabsız suallar bal gətirmir
                                 </small>
                             </div>
                         </div>
@@ -229,7 +229,7 @@
         <div class="card ps-question-map" id="question-map">
             <div class="card-header bg-primary text-white py-2">
                 <h6 class="mb-0">
-                    <i class="fas fa-map me-2"></i>Question Map
+                    <i class="fas fa-map me-2"></i>Sual xəritəsi
                 </h6>
             </div>
             <div class="card-body ps-question-map-body">
@@ -244,7 +244,7 @@
                                 <button type="button"
                                         class="ps-qmap-btn"
                                         data-question="{{ $item['question_id'] }}"
-                                        title="Question {{ $item['number'] }} — {{ $group['name'] }}">
+                                        title="Sual {{ $item['number'] }} — {{ $group['name'] }}">
                                     {{ $item['number'] }}
                                 </button>
                             @endforeach
@@ -253,8 +253,8 @@
                 @endforeach
 
                 <div class="ps-qmap-legend">
-                    <span><i class="ps-qmap-swatch is-answered"></i>Answered</span>
-                    <span><i class="ps-qmap-swatch"></i>Not answered</span>
+                    <span><i class="ps-qmap-swatch is-answered"></i>Cavablandı</span>
+                    <span><i class="ps-qmap-swatch"></i>Cavablanmadı</span>
                 </div>
             </div>
         </div>
@@ -268,7 +268,7 @@
             <div class="modal-header bg-warning text-dark">
                 <h5 class="modal-title" id="confirmSubmitModalLabel">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Confirm Exam Submission
+                    İmtahanın təqdimatını təsdiqlə
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -276,30 +276,30 @@
                 <div class="text-center mb-3">
                     <i class="fas fa-paper-plane text-primary" style="font-size: 3rem;"></i>
                 </div>
-                <h6 class="text-center mb-3">Are you sure you want to submit your exam?</h6>
+                <h6 class="text-center mb-3">İmtahanı təqdim etmək istədiyinizə əminsiniz?</h6>
                 <div class="alert alert-info" role="alert">
                     <ul class="mb-0">
-                        <li>You have answered <strong><span id="modal-answered-count">0</span> out of {{ $questions->count() }}</strong> questions</li>
-                        <li>Once submitted, you <strong>cannot change</strong> your answers</li>
-                        <li>Your exam will be automatically graded</li>
+                        <li><strong>{{ $questions->count() }}</strong> sualdan <strong><span id="modal-answered-count">0</span></strong> ədədinə cavab verdiniz</li>
+                        <li>Təqdim etdikdən sonra cavablarınızı <strong>dəyişə bilməzsiniz</strong></li>
+                        <li>İmtahanınız avtomatik qiymətləndiriləcək</li>
                     </ul>
                 </div>
                 <div class="alert alert-warning d-none" role="alert" id="modal-unanswered-warning">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong><span id="modal-unanswered-count">0</span></strong> question(s) are still unanswered and will score nothing.
+                    <strong><span id="modal-unanswered-count">0</span></strong> sual hələ cavablanmayıb və bal gətirməyəcək.
                 </div>
                 <p class="text-muted text-center">
-                    Please review your answers before proceeding.
+                    Davam etməzdən əvvəl cavablarınızı yoxlayın.
                 </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-arrow-left me-2"></i>
-                    Go Back & Review
+                    Geri qayıt və yoxla
                 </button>
                 <button type="button" class="btn btn-success" id="confirmSubmitBtn">
                     <i class="fas fa-check me-2"></i>
-                    Yes, Submit Exam
+                    Bəli, təqdim et
                 </button>
             </div>
         </div>
@@ -313,15 +313,15 @@
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="timeUpModalLabel">
                     <i class="fas fa-hourglass-end me-2"></i>
-                    Time's Up
+                    Vaxt bitdi
                 </h5>
             </div>
             <div class="modal-body text-center">
                 <i class="fas fa-clock text-danger mb-3" style="font-size: 3rem;"></i>
                 <p class="mb-0">
-                    Your exam time has ended. Submitting your answers automatically in
-                    <span id="autoSubmitCountdown"></span> seconds
-                    &mdash; please don't close this window.
+                    İmtahan vaxtınız bitdi. Cavablarınız avtomatik təqdim olunur:
+                    <span id="autoSubmitCountdown"></span> saniyə
+                    &mdash; bu pəncərəni bağlamayın.
                 </p>
             </div>
         </div>

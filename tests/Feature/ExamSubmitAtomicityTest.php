@@ -75,7 +75,7 @@ it('stores exactly one result when the same exam is submitted twice', function (
 
     expect(ExamResult::count())->toBe(1);
     $second->assertRedirect(route('student.exams'));
-    $second->assertSessionHas('error', 'You have already completed this exam.');
+    $second->assertSessionHas('error', 'Bu imtahanı artıq tamamlamısınız.');
 });
 
 it('does not add answer rows on the second submit', function () {
@@ -104,7 +104,7 @@ it('leaves the first submit intact and the attempt closed', function () {
     submitAnswers($user, $seed['exam'], ['answers' => [$questionId => 0]]);
 
     // The wrong answer from the replay must not overwrite the scored one.
-    expect(ExamResult::first()->score)->toBe(1)
+    expect((float) ExamResult::first()->score)->toBe(1.0)
         ->and(ExamAttempt::find($seed['attempt']->id)->completed_at)->not->toBeNull();
 });
 

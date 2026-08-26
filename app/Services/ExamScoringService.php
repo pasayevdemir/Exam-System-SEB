@@ -13,6 +13,7 @@ namespace App\Services;
 
 use App\Models\ExamAttempt;
 use App\Models\ExamAttemptQuestion;
+use App\Models\Question;
 use Illuminate\Support\Collection;
 
 /**
@@ -141,7 +142,13 @@ class ExamScoringService
     }
 
     /**
-     * The number of MCQ questions answered correctly.
+     * What the MCQ half of this paper is worth: how many questions are right,
+     * and the marks those questions carry.
+     *
+     * A question is worth its weight_at_generation, the weight pinned onto the
+     * attempt when the paper was generated. Reading the weight off the question
+     * instead would let an admin editing a difficulty afterwards silently move
+     * marks that were already awarded.
      *
      * Multiple choice is all-or-nothing: every correct option and no incorrect
      * one. Partial credit would need a rule about what a half-right answer is
@@ -149,50 +156,61 @@ class ExamScoringService
      *
      * @param  Collection<int, ExamAttemptQuestion>  $attemptQuestions
      * @param  Collection<int, mixed>  $resolvedAnswers
+     * @return array{correct: int, score: float}
      */
-    public function countCorrect(Collection $attemptQuestions, Collection $resolvedAnswers): int
+    public function calculateScore(Collection $attemptQuestions, Collection $resolvedAnswers): array
     {
-        $questionsById = $attemptQuestions->map->question->keyBy('id');
+        $byQuestionId = $attemptQuestions->keyBy('question_id');
         $correct = 0;
+        $score = 0.0;
 
         foreach ($resolvedAnswers as $questionId => $answerData) {
-            $question = $questionsById->get($questionId);
+            $attemptQuestion = $byQuestionId->get($questionId);
 
-            if ($question === null) {
+            if ($attemptQuestion === null) {
                 continue;
             }
 
-            if ($question->question_type === 'single') {
-                // Looked up among this question's own options, so a known-correct
-                // id from a different question simply is not found.
-                $answer = $question->answers->firstWhere('id', $answerData);
+            $question = $attemptQuestion->question;
 
-                if ($answer && $answer->is_correct) {
-                    $correct++;
-                }
-
+            if (! $this->isCorrect($question, $answerData)) {
                 continue;
             }
 
-            $selected = collect(is_array($answerData) ? $answerData : [$answerData])
-                ->map(fn ($id) => (int) $id)
-                ->sort()
-                ->values()
-                ->all();
-
-            $expected = $question->answers
-                ->where('is_correct', true)
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->sort()
-                ->values()
-                ->all();
-
-            if ($selected === $expected) {
-                $correct++;
-            }
+            $correct++;
+            $score += (float) $attemptQuestion->weight_at_generation;
         }
 
-        return $correct;
+        return ['correct' => $correct, 'score' => round($score, 2)];
+    }
+
+    /**
+     * @param  mixed  $answerData  an answer id for single choice, a list of them for multiple
+     */
+    private function isCorrect(Question $question, mixed $answerData): bool
+    {
+        if ($question->question_type === 'single') {
+            // Looked up among this question's own options, so a known-correct
+            // id from a different question simply is not found.
+            $answer = $question->answers->firstWhere('id', $answerData);
+
+            return $answer !== null && (bool) $answer->is_correct;
+        }
+
+        $selected = collect(is_array($answerData) ? $answerData : [$answerData])
+            ->map(fn ($id) => (int) $id)
+            ->sort()
+            ->values()
+            ->all();
+
+        $expected = $question->answers
+            ->where('is_correct', true)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->sort()
+            ->values()
+            ->all();
+
+        return $selected === $expected;
     }
 }

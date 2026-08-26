@@ -72,7 +72,7 @@ it('scores an expired submission from autosaved drafts, not the request body', f
     ]);
 
     // Scored from the draft (wrong answer), not the request body (correct answer).
-    expect(ExamResult::first()->score)->toBe(0)
+    expect((float) ExamResult::first()->score)->toBe(0.0)
         ->and(ExamResult::first()->studentAnswers->first()->answer_id)->toBe($q['answers'][0]->id);
 });
 
@@ -90,7 +90,7 @@ it('does not let a late manual submit bypass expiry by omitting auto_submit', fu
         'answers' => [$q['question']->id => 2],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(0);
+    expect((float) ExamResult::first()->score)->toBe(0.0);
 });
 
 it('records an explicit not-submitted row for an unfinished file upload on auto-submit', function () {
@@ -114,7 +114,7 @@ it('records an explicit not-submitted row for an unfinished file upload on auto-
     expect($fileAnswer)->not->toBeNull()
         ->and($fileAnswer->is_graded)->toBeFalse()
         ->and($fileAnswer->file_path)->toBeNull()
-        ->and($fileAnswer->admin_feedback)->toBe('File not submitted before time limit.');
+        ->and($fileAnswer->admin_feedback)->toBe('Fayl vaxt limitindən əvvəl təqdim edilmədi.');
 });
 
 it('still accepts a normal on-time submission unaffected by expiry logic', function () {
@@ -127,7 +127,7 @@ it('still accepts a normal on-time submission unaffected by expiry logic', funct
         'answers' => [$seed['questions'][0]['question']->id => 1],
     ]);
 
-    expect(ExamResult::first()->score)->toBe(1);
+    expect((float) ExamResult::first()->score)->toBe(1.0);
 });
 
 it('delays the client auto-submit past the server grace period so it is not rejected as incomplete', function () {

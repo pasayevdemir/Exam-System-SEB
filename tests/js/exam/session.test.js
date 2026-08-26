@@ -147,7 +147,7 @@ describe('progress', () => {
         progress.update();
 
         expect(document.getElementById('submit-warning').textContent)
-            .toContain('2 question(s) unanswered');
+            .toContain('2 sual cavablanmayıb');
         expect(document.getElementById('modal-unanswered-warning').classList.contains('d-none'))
             .toBe(false);
     });
@@ -161,7 +161,7 @@ describe('progress', () => {
         progress.update();
 
         expect(document.getElementById('submit-warning').textContent)
-            .toBe('All questions answered. You can now submit the exam.');
+            .toBe('Bütün suallara cavab verildi. İndi imtahanı təqdim edə bilərsiniz.');
         expect(document.getElementById('progress-bar').style.width).toBe('100%');
     });
 });

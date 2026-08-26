@@ -118,7 +118,7 @@ describe('a 409 from an expired attempt', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(queue()).toHaveLength(0);
-        expect(document.getElementById('autosave-status').textContent).toBe('Time limit reached');
+        expect(document.getElementById('autosave-status').textContent).toBe('Vaxt limiti bitdi');
     });
 
     it('clears an already-queued answer instead of retrying it forever', async () => {
@@ -164,7 +164,7 @@ describe('superseded requests', () => {
         await Promise.all([stale, fresh]);
 
         expect(queue()).toHaveLength(0);
-        expect(document.getElementById('autosave-status').textContent).toBe('Saved');
+        expect(document.getElementById('autosave-status').textContent).toBe('Saxlanıldı');
     });
 });
 
@@ -179,7 +179,7 @@ describe('the connection indicator', () => {
         await done;
 
         expect(document.getElementById('connection-label').textContent)
-            .toBe('1 answer(s) queued - will retry');
+            .toBe('1 cavab növbədə — yenidən cəhd ediləcək');
         expect(document.getElementById('connection-dot').className).toContain('bg-danger');
     });
 
@@ -188,7 +188,7 @@ describe('the connection indicator', () => {
 
         await makeAutosave().flushQueue();
 
-        expect(document.getElementById('connection-label').textContent).toBe('Connected');
+        expect(document.getElementById('connection-label').textContent).toBe('Bağlantı var');
     });
 });
 

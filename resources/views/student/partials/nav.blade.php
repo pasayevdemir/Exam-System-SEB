@@ -9,14 +9,14 @@
     <i class="fas fa-user-graduate me-1"></i>{{ auth()->user()->name }}
 </a>
 <a class="nav-link text-white" href="{{ route('student.exams') }}">
-    <i class="fas fa-file-alt me-1"></i>My Exams
+    <i class="fas fa-file-alt me-1"></i>İmtahanlarım
 </a>
 <a class="nav-link text-white" href="{{ route('student.my-results') }}">
-    <i class="fas fa-chart-line me-1"></i>My Results
+    <i class="fas fa-chart-line me-1"></i>Nəticələrim
 </a>
 <form action="{{ route('student.logout') }}" method="POST" class="d-inline">
     @csrf
     <button type="submit" class="btn btn-link nav-link text-white">
-        <i class="fas fa-sign-out-alt me-1"></i>Logout
+        <i class="fas fa-sign-out-alt me-1"></i>Çıxış
     </button>
 </form>

@@ -146,7 +146,7 @@ it('shows the fin code as locked once the student has exam history', function ()
 
     test()->actingAs($user)->get(route('student.profile'))
         ->assertOk()
-        ->assertSee('can no longer be changed here');
+        ->assertSee('burada dəyişdirilə bilməz');
 });
 
 /* -------------------------------------------------------------------------- */
