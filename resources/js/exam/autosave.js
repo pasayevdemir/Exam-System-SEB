@@ -1,3 +1,12 @@
+/*!
+ * Peerstack Exam System
+ *
+ * @author    Damir Pashayev <pashayevdamir@gmail.com>
+ * @copyright 2026 Damir Pashayev. All rights reserved.
+ * @license   Proprietary. All rights reserved.
+ * @link      https://github.com/pasayevdemir
+ */
+
 /**
  * Background autosave for MCQ selections, plus the queue that survives a
  * connection dropping out from under it.

@@ -1,3 +1,12 @@
+/*!
+ * Peerstack Exam System
+ *
+ * @author    Damir Pashayev <pashayevdamir@gmail.com>
+ * @copyright 2026 Damir Pashayev. All rights reserved.
+ * @license   Proprietary. All rights reserved.
+ * @link      https://github.com/pasayevdemir
+ */
+
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { createAutosave } from '../../../resources/js/exam/autosave.js';
 import { mountExamDom, respondWith, stubClock, stubCsrf } from './fixture.js';

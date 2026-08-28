@@ -1,3 +1,10 @@
+{{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
 {{-- Common student navbar items, mirroring admin/partials/nav.blade.php.
 
      Deliberately NOT used by student/exam.blade.php: the in-exam navbar keeps

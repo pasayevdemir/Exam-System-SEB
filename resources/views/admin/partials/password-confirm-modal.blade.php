@@ -1,4 +1,11 @@
 {{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
+{{--
     Reusable "confirm this deletion with the admin password" modal.
 
     Being logged in is not enough for a destructive action, so the form posts an

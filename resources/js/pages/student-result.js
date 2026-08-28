@@ -1,3 +1,12 @@
+/*!
+ * Peerstack Exam System
+ *
+ * @author    Damir Pashayev <pashayevdamir@gmail.com>
+ * @copyright 2026 Damir Pashayev. All rights reserved.
+ * @license   Proprietary. All rights reserved.
+ * @link      https://github.com/pasayevdemir
+ */
+
 /** How long a finished student sees their result before being signed out. */
 const COUNTDOWN_SECONDS = 20;
 

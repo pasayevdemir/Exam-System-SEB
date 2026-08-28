@@ -1,3 +1,12 @@
+/*!
+ * Peerstack Exam System
+ *
+ * @author    Damir Pashayev <pashayevdamir@gmail.com>
+ * @copyright 2026 Damir Pashayev. All rights reserved.
+ * @license   Proprietary. All rights reserved.
+ * @link      https://github.com/pasayevdemir
+ */
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createServerClock } from '../../../resources/js/exam/clock.js';
 import { createTimer, formatTime } from '../../../resources/js/exam/timer.js';

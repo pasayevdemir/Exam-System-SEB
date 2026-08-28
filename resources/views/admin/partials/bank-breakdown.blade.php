@@ -1,4 +1,11 @@
 {{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
+{{--
     How one sitting went bank by bank.
 
     Deliberately CSS classes and nothing else: a results page renders one of

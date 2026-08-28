@@ -1,3 +1,10 @@
+{{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
 {{-- Common admin navbar items. Pages that need a contextual "back" link render
      it themselves before including this, so the back link stays page-specific
      while Dashboard/Students/Banks/Logout stay identical everywhere. --}}

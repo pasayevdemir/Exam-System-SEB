@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AuthorshipHeaders;
 use App\Http\Middleware\ContentSecurityPolicy;
 use App\Http\Middleware\EnsureSafeExamBrowser;
 use App\Http\Middleware\StudentMiddleware;
@@ -27,6 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Every response, so a page that forgets to declare itself is still
         // covered. The policy itself is in the middleware.
         $middleware->web(append: [ContentSecurityPolicy::class]);
+
+        // Authorship travels with the deployment, not just with the source:
+        // compiled Blade and bundled JS carry no file headers, so the running
+        // app states who wrote it on every response instead.
+        $middleware->web(append: [AuthorshipHeaders::class]);
 
         // Behind Cloudflare + the host nginx reverse-proxy, so the app must trust
         // X-Forwarded-* to know the original request was HTTPS (otherwise every

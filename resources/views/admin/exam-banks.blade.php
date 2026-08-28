@@ -1,3 +1,10 @@
+{{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
 @extends('layouts.app')
 
 @section('page', 'exam-banks')

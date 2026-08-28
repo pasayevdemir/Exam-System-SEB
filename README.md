@@ -584,7 +584,35 @@ ls -1 /home/exam/backups/                # timestamped DB + .env snapshots
 
 ## 📄 License
 
-MIT License - Free for educational and commercial use.
+**Proprietary. All rights reserved.** This project is **not** open source.
+
+Copyright © 2026 Damir Pashayev <pashayevdamir@gmail.com>
+
+No permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense, or sell copies of this software, in whole or in part, without the
+prior written consent of the copyright holder. See [LICENSE](LICENSE) for the
+full terms.
+
+Third-party components listed under _Core Dependencies_ below remain the
+property of their respective authors under their own licences.
+
+## ✍️ Authorship
+
+This work is the original work of **Damir Pashayev**
+(<https://github.com/pasayevdemir>). Authorship is stated at eight independent
+levels — source headers, licence files, package manifests, rendered HTML, HTTP
+response headers, compiled asset banners, a cryptographic seal, and an
+automated test that fails the build if any of them is removed.
+
+The authorship fingerprint, verifiable by anyone without access to this
+repository, is:
+
+```
+a7e9122a4821f9871b6101467a9475750e073318f0f77225da9b007b2a690d29
+```
+
+See [ATTRIBUTION.md](ATTRIBUTION.md) for how to verify it, [NOTICE](NOTICE) for
+the full attribution notice, and [AUTHORS](AUTHORS) for the authorship record.
 
 ## 🙏 Acknowledgments
 

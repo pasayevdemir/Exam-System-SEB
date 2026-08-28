@@ -479,3 +479,15 @@ parameters:
 			identifier: method.notFound
 			count: 2
 			path: tests/Feature/StudentRegistrationTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/Feature/AuthorshipAttributionTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\|Pest\\Support\\HigherOrderTapProxy\:\:markTestSkipped\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/Feature/AuthorshipAttributionTest.php

@@ -1,3 +1,10 @@
+{{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
 @extends('layouts.app')
 
 {{-- Summary of one sitting. By design this page carries no questions, no chosen

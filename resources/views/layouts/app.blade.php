@@ -1,9 +1,30 @@
+{{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
 <!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {{-- Authorship metadata. Source-file copyright headers do not survive
+         Blade compilation, so the rendered page states its own authorship.
+         Single source of truth: app/Support/Authorship.php --}}
+    @foreach (\App\Support\Authorship::meta() as $metaName => $metaContent)
+        <meta name="{{ $metaName }}" content="{{ $metaContent }}">
+    @endforeach
+    <link rel="license" href="{{ \App\Support\Authorship::LINK }}">
+    <!--
+        {{ \App\Support\Authorship::notice() }}
+        Author: {{ \App\Support\Authorship::AUTHOR }} <{{ \App\Support\Authorship::EMAIL }}>
+        {{ \App\Support\Authorship::LINK }}
+        This notice is part of the work. Removing it does not transfer copyright.
+    -->
     <title>@yield('title', 'Peerstack Academy — İmtahan Sistemi')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('styles')

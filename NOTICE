@@ -1,0 +1,81 @@
+================================================================================
+                          PEERSTACK EXAM SYSTEM
+                    ATTRIBUTION AND COPYRIGHT NOTICE
+================================================================================
+
+Copyright (c) 2026 Damir Pashayev <pashayevdamir@gmail.com>
+All rights reserved.
+
+--------------------------------------------------------------------------------
+AUTHORSHIP
+--------------------------------------------------------------------------------
+
+This software, known as the "Peerstack Exam System" (also referred to as the
+SITC Exam Management System), together with its complete source code, database
+schema, test suite, deployment tooling and documentation, is the original work
+of:
+
+    Damir Pashayev
+    pashayevdamir@gmail.com
+    https://github.com/pasayevdemir
+
+The following subsystems were designed and implemented in their entirety by the
+above-named author:
+
+  * The exam generation and question-bank composition engine
+    (Exam, ExamAttempt, Question, QuestionBank, Answer, StudentAnswer)
+  * The anti-cheat and Safe Exam Browser enforcement layer
+    (SebVerify, EnsureSafeExamBrowser, ContentSecurityPolicy)
+  * The attempt lifecycle, autosave, server-clock and keep-alive subsystem
+  * The weighted exam scoring engine (ExamScoringService)
+  * The question import pipeline (QuestionImportService, CSV/JSON parsers)
+  * The Markdown + KaTeX mathematical rendering pipeline
+    (MarkdownRenderer, MathInlineParser, MathNode, MathNodeRenderer)
+  * The administrative and student interface layers, and all Blade templates
+  * The Docker development and production topology, and the deployment workflow
+
+--------------------------------------------------------------------------------
+LICENCE
+--------------------------------------------------------------------------------
+
+This software is proprietary. It is NOT open source and NOT public domain.
+
+No permission is granted to any person or organisation to use, copy, modify,
+merge, publish, distribute, sublicense, or sell copies of this software, in
+whole or in part, without the prior written consent of the copyright holder.
+
+See the LICENSE file for the full terms.
+
+--------------------------------------------------------------------------------
+ATTRIBUTION INTEGRITY
+--------------------------------------------------------------------------------
+
+Authorship attribution is embedded throughout this work at multiple independent
+levels, including but not limited to:
+
+  1. A copyright header in every source file (PHP, JavaScript, Blade, CSS).
+  2. This NOTICE file and the accompanying AUTHORS and LICENSE files.
+  3. Package manifests (composer.json, package.json).
+  4. Runtime metadata emitted by the application in every rendered HTML page
+     and in HTTP response headers.
+  5. A legal-comment banner compiled into every production JavaScript and CSS
+     asset bundle.
+  6. An authorship fingerprint constant embedded in the application source.
+  7. An automated test (tests/Feature/AuthorshipAttributionTest.php) which
+     fails the build if any of the above is removed or altered.
+  8. The cryptographic manifest in ATTRIBUTION.md, which records a SHA-256
+     digest for each attribution site.
+
+Removing, obscuring, altering, or circumventing any of these notices does not
+transfer, waive, or extinguish the copyright in this work, and does not create
+any authorship interest in any other party. Such removal constitutes a knowing
+act taken against the copyright holder's stated terms, and — under the laws of
+many jurisdictions, including those implementing Article 12 of the WIPO
+Copyright Treaty — the removal of rights-management information is itself a
+separate and independently actionable wrong.
+
+The authoritative record of authorship is the version control history of this
+repository, in which every commit is authored by Damir Pashayev and bears a
+verifiable timestamp.
+
+================================================================================

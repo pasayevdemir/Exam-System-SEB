@@ -1,4 +1,11 @@
 {{--
+    Peerstack Exam System
+
+    Author    : Damir Pashayev <pashayevdamir@gmail.com>
+    Copyright : 2026 Damir Pashayev. All rights reserved.
+    Link      : https://github.com/pasayevdemir
+--}}
+{{--
     The live-updating half of the exams page. Rendered both by the page itself
     and by StudentController::examsState(), which hashes this output — so any
     admin change that alters it (activate, rename, retime, re-bank, allow a

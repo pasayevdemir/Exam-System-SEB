@@ -1,0 +1,45 @@
+Peerstack Exam System — Authors
+===============================
+
+This file lists every person who holds an authorship interest in this work.
+
+Sole author, architect and copyright holder
+-------------------------------------------
+
+    Damir Pashayev  <pashayevdamir@gmail.com>
+    https://github.com/pasayevdemir
+
+    Author of the complete work: application architecture, domain model,
+    exam engine, anti-cheat layer, scoring engine, import pipeline,
+    mathematics rendering, user interface, test suite, container topology
+    and deployment automation.
+
+    Every commit in this repository's version control history is authored
+    by, and attributable to, the person named above.
+
+Other contributors
+------------------
+
+    None.
+
+    No other person or organisation has contributed source code to this work.
+    Should a contribution be accepted in future, it will be recorded here
+    together with the scope of the contribution; the absence of any other name
+    from this file is itself a statement of fact about the origin of this work.
+
+Third-party components
+----------------------
+
+This work builds upon independently licensed open-source components, which
+remain the property of their respective authors and are used under their own
+licence terms. These components are declared in `composer.json` and
+`package.json` and are installed into `vendor/` and `node_modules/`; they are
+not part of the copyrighted work described above, and nothing in this file
+asserts any claim over them.
+
+Notable third-party components: Laravel Framework, Bootstrap, KaTeX,
+league/commonmark, phpoffice/phpspreadsheet, FontAwesome, Axios, Vite.
+
+--------------------------------------------------------------------------------
+See LICENSE for licence terms and NOTICE for the full attribution notice.
+Copyright (c) 2026 Damir Pashayev. All rights reserved.
