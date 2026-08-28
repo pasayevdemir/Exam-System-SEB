@@ -1141,23 +1141,26 @@ h1.h3 {
     color: var(--ps-text);
 }
 
-/* tabular-nums on both: percentages and marks sit in a column, and proportional
-   digits make that column visibly ragged from row to row. */
-.ps-bank-pct {
+/* A percentage and its supporting figure. Named for what they are rather than
+   for the bank breakdown they started in - the results table renders the same
+   pair, and one vocabulary beats two identical ones under different names.
+   tabular-nums on both: these sit in a column, and proportional digits make
+   that column visibly ragged from row to row. */
+.ps-pct {
     font-size: 1rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
 
-.ps-bank-meta {
+.ps-pct-meta {
     font-size: 0.75rem;
     color: var(--ps-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.ps-bank-pct--good { color: var(--ps-green-dark); }
-.ps-bank-pct--mid  { color: #9a6200; }
-.ps-bank-pct--weak { color: #c0392b; }
+.ps-pct--good { color: var(--ps-green-dark); }
+.ps-pct--mid  { color: #9a6200; }
+.ps-pct--weak { color: #c0392b; }
 
 /* Specificity 0,2,0, deliberately above the bare .progress-bar default, so the
    colour holds no matter where the bundler emits these relative to it. */

@@ -248,10 +248,43 @@ it('draws the breakdown into the admin results page', function () {
         // One state per row drives both the number and the bar - see the
         // .progress-bar cascade note in app.css for what the old two-class
         // version rendered.
-        ->and($html)->toContain('ps-bank-pct--good')
+        ->and($html)->toContain('ps-pct--good')
         ->and($html)->toContain('ps-bank-bar--good')
-        ->and($html)->toContain('ps-bank-pct--mid')
+        ->and($html)->toContain('ps-pct--mid')
         ->and($html)->toContain('ps-bank-bar--mid')
         // The headline score is the weighted one, out of the paper's weight.
-        ->and($html)->toContain('4.5 / 6');
+        // The headline score is the weighted one, out of the paper's weight,
+        // and the percentage beside it - the only figure comparable between
+        // two students whose papers were re-quotaed to different weights.
+        ->and($html)->toContain('4.5 / 6 bal')
+        ->and($html)->toContain('75%');
+});
+
+it('reports a mark as a share of the marks that were available', function () {
+    $user = User::factory()->create();
+    $seed = seedAttempt($user, [
+        ['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 2.0],
+        ['type' => 'single', 'options' => 3, 'correct' => [0], 'weight' => 2.0],
+    ]);
+
+    submitAnswers($user, $seed['exam'], [
+        'answers' => [$seed['questions'][0]['question']->id => 0],
+    ]);
+
+    // 2 of 4 marks - and 1 of 2 questions, which is the same here only because
+    // both questions weigh the same.
+    expect(ExamResult::first()->percentage())->toBe(50.0);
+});
+
+it('reports no percentage rather than dividing by zero on an empty paper', function () {
+    $result = ExamResult::create([
+        'exam_id' => Exam::factory()->create()->id,
+        'user_id' => User::factory()->create()->id,
+        'total_questions' => 0,
+        'correct_answers' => 0,
+        'score' => 0,
+        'submitted_at' => now(),
+    ]);
+
+    expect($result->percentage())->toBe(0.0);
 });

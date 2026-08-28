@@ -40,7 +40,7 @@
             <div class="ps-bank-row">
                 <div class="d-flex justify-content-between align-items-baseline gap-2 mb-1">
                     <span class="ps-bank-name text-truncate">{{ $bank['bank_name'] }}</span>
-                    <span class="ps-bank-pct ps-bank-pct--{{ $state }} flex-shrink-0">{{ $percentage }}%</span>
+                    <span class="ps-pct ps-pct--{{ $state }} flex-shrink-0">{{ $percentage }}%</span>
                 </div>
                 <div class="progress" role="progressbar"
                      aria-label="{{ $bank['bank_name'] }}"
@@ -49,7 +49,7 @@
                 </div>
                 {{-- The counts read as the bar's caption rather than as a second
                      headline, which is what the one long badge made them. --}}
-                <div class="ps-bank-meta mt-1">
+                <div class="ps-pct-meta mt-1">
                     {{ $bank['correct_count'] }}/{{ $bank['total_count'] }} sual
                     &middot;
                     {{ \App\Models\ExamResult::formatPoints($bank['earned_weight']) }}/{{ \App\Models\ExamResult::formatPoints($bank['max_weight']) }} bal

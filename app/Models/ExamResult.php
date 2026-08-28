@@ -118,6 +118,23 @@ class ExamResult extends Model
     }
 
     /**
+     * This mark as a share of the marks that were available, 0-100.
+     *
+     * The only figure two students can be compared on. Their raw scores cannot
+     * be: an exam whose bank quotas changed between sittings hands out papers
+     * of different total weight, so 43.5 and 44 on the same results page are
+     * 55.1% and 58.7% - a gap the raw numbers make look like nothing.
+     */
+    public function percentage(): float
+    {
+        $maxScore = $this->maxScore();
+
+        return $maxScore > 0
+            ? round((float) $this->score / $maxScore * 100, 1)
+            : 0.0;
+    }
+
+    /**
      * A weight or a score as it should read on a page.
      *
      * Weights are halves, so two decimal places is one too many nearly always:

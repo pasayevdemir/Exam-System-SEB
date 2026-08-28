@@ -109,6 +109,11 @@
                                 // rather than its question count.
                                 $scoreLabel = \App\Models\ExamResult::formatPoints($result->score)
                                     .' / '.\App\Models\ExamResult::formatPoints($result->maxScore());
+                                // The headline figure, because the raw score is not
+                                // comparable between rows: an exam re-quotaed between
+                                // sittings hands out papers of different total weight.
+                                $percentage = $result->percentage();
+                                $pctState = $percentage >= 80 ? 'good' : ($percentage >= 50 ? 'mid' : 'weak');
                             @endphp
                             <tr>
                                 <td>{{ $result->user?->name ?? 'N/A' }}</td>
@@ -119,9 +124,8 @@
                                             <i class="fas fa-clock me-1"></i>Pending
                                         </span>
                                     @else
-                                        <span class="badge bg-primary fs-6">
-                                            {{ $scoreLabel }}
-                                        </span>
+                                        <div class="ps-pct ps-pct--{{ $pctState }}">{{ $percentage }}%</div>
+                                        <div class="ps-pct-meta">{{ $scoreLabel }} bal</div>
                                     @endif
                                 </td>
                                 <td>{{ $result->correct_answers }}</td>

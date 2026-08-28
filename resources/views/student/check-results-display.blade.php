@@ -97,10 +97,7 @@
                             @if($gradingPending)
                                 <span class="text-muted">Gözləyir</span>
                             @elseif($examResult->maxScore() > 0)
-                                {{-- Against the marks available, not the question count:
-                                     the two stopped being the same once a hard question
-                                     started carrying two marks. --}}
-                                {{ round($examResult->score / $examResult->maxScore() * 100) }}%
+                                {{ $examResult->percentage() }}%
                             @else
                                 —
                             @endif

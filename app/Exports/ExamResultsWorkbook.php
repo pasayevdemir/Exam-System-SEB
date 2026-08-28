@@ -152,12 +152,10 @@ class ExamResultsWorkbook
 
             $maxScore = $result->maxScore();
 
-            // Out of the marks available rather than the question count. The two
-            // only agree on an all-easy paper now that a hard question carries
-            // two marks, and this sheet has to match the page it is exported from.
-            $percentage = $maxScore > 0
-                ? round(((float) $result->score / $maxScore) * 100, 1)
-                : 0;
+            // Out of the marks available rather than the question count, and
+            // from the model so this sheet cannot drift from the page it is
+            // exported from.
+            $percentage = $result->percentage();
 
             $this->text($sheet, 'A'.$row, $result->user?->name ?? 'N/A');
             $this->text($sheet, 'B'.$row, $result->user?->fin_code ?? 'N/A');
