@@ -146,7 +146,32 @@
                                         <span class="badge bg-danger">{{ $violationCount }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $result->submitted_at->format('M d, Y H:i') }}</td>
+                                <td>
+                                    <div>{{ $result->submitted_at->format('M d, Y H:i') }}</div>
+                                    @php $durationMinutes = $result->examAttempt?->durationMinutes(); @endphp
+                                    @if ($durationMinutes === null)
+                                        {{-- Attempt cleared by an admin, or a legacy row without one. --}}
+                                        <div class="ps-pct-meta">—</div>
+                                    @elseif ($exam->time_limit_minutes)
+                                        @php
+                                            $usedPct = min(100, (int) round($durationMinutes / $exam->time_limit_minutes * 100));
+                                            // Amber only as the clock runs out; the app's bank-breakdown colours.
+                                            $durState = $usedPct >= 90 ? 'mid' : 'good';
+                                        @endphp
+                                        <div class="ps-pct-meta">{{ $durationMinutes }} dəq / {{ $exam->time_limit_minutes }}</div>
+                                        <div class="progress ps-dur-track">
+                                            <div class="progress-bar ps-bank-bar--{{ $durState }}"
+                                                 role="progressbar"
+                                                 style="width: {{ $usedPct }}%"
+                                                 aria-valuenow="{{ $usedPct }}"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"></div>
+                                        </div>
+                                    @else
+                                        {{-- Untimed exam: a duration, but nothing to measure it against. --}}
+                                        <div class="ps-pct-meta">{{ $durationMinutes }} dəq</div>
+                                    @endif
+                                </td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info"
                                             data-bs-toggle="modal"

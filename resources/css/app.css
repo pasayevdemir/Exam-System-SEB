@@ -1177,6 +1177,15 @@ h1.h3 {
 .progress-bar.ps-bank-bar--mid  { background-color: var(--ps-warning); }
 .progress-bar.ps-bank-bar--weak { background-color: var(--ps-danger); }
 
+/* Time-on-sitting bar under the submission date in the results table. Reuses the
+   bank-breakdown bar (.progress + .ps-bank-bar--*) so the two read as one system;
+   only the size differs - it sits in a tight table cell, not a modal row. */
+.ps-dur-track {
+    height: 6px;
+    max-width: 120px;
+    margin-top: 4px;
+}
+
 
 /* ── Math (KaTeX) ── */
 

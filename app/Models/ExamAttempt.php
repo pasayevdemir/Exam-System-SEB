@@ -123,4 +123,20 @@ class ExamAttempt extends Model
 
         return max(0, (int) now()->diffInSeconds($this->expires_at, false));
     }
+
+    /**
+     * Whole minutes from the first question served to submission, or null while
+     * the attempt is still open. started_at is set the moment an attempt is
+     * created, so completed_at is the only thing that can be missing. The same
+     * figure the student result page already reports for a finished sitting -
+     * kept in one method so the admin table and that page cannot drift apart.
+     */
+    public function durationMinutes(): ?int
+    {
+        if ($this->completed_at === null) {
+            return null;
+        }
+
+        return max(0, (int) round($this->started_at->diffInMinutes($this->completed_at)));
+    }
 }
